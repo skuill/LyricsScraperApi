@@ -1,7 +1,10 @@
+using FluentValidation;
 using LyricsScraperApi.Middlewares;
 using LyricsScraperApi.Models;
 using LyricsScraperApi.Models.Requests;
+using LyricsScraperApi.Validators;
 using LyricsScraperNET;
+using Microsoft.AspNetCore.Identity;
 using Serilog;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -48,6 +51,7 @@ builder.Services.AddSwaggerGen(opts =>
 builder.Services.AddAutoMapper(cfg => { cfg.AddProfile<MappingProfile>(); });
 
 builder.Services.AddScoped<ILyricsScraperClient, LyricsScraperClient>();
+builder.Services.AddScoped<IValidator<SearchRequestBase>, SearchRequestBaseValidator>();
 
 var app = builder.Build();
 

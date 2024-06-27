@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  lyricsscraperapi:
+    image: ${DOCKER_REGISTRY-}lyricsscraperapi
+    build:
+      context: .
+      dockerfile: LyricsScraperApi/Dockerfile
