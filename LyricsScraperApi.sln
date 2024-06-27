@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34916.146
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LyricsScraperApi", "LyricsScraperApi\LyricsScraperApi.csproj", "{D9C1AE4B-339B-4B44-B01C-1991A6F9BFF2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{462B4C0C-D748-467A-9EF1-AB4DBB544539}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LyricsScraperApi.UnitTests", "LyricsScraperApi.UnitTests\LyricsScraperApi.UnitTests.csproj", "{70F0C3D0-B855-4D8F-A64D-483206A53811}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D9C1AE4B-339B-4B44-B01C-1991A6F9BFF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9C1AE4B-339B-4B44-B01C-1991A6F9BFF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9C1AE4B-339B-4B44-B01C-1991A6F9BFF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9C1AE4B-339B-4B44-B01C-1991A6F9BFF2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70F0C3D0-B855-4D8F-A64D-483206A53811}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70F0C3D0-B855-4D8F-A64D-483206A53811}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70F0C3D0-B855-4D8F-A64D-483206A53811}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70F0C3D0-B855-4D8F-A64D-483206A53811}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{70F0C3D0-B855-4D8F-A64D-483206A53811} = {462B4C0C-D748-467A-9EF1-AB4DBB544539}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {55EDF778-087E-4140-B05E-319E04A46E41}
+	EndGlobalSection
+EndGlobal
