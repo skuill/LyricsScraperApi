@@ -4,7 +4,6 @@ using LyricsScraperApi.Models;
 using LyricsScraperApi.Models.Requests;
 using LyricsScraperApi.Validators;
 using LyricsScraperNET;
-using Microsoft.AspNetCore.Identity;
 using Serilog;
 using System.Reflection;
 using System.Text.Json.Serialization;

@@ -117,7 +117,7 @@ namespace LyricsScraperApi.Controllers
         {
             _lyricsScraperClient.WithAllProviders();
             _lyricsScraperClient.RemoveProvider(ExternalProviderType.Musixmatch); // Remove after fixing: https://github.com/skuill/LyricsScraperNET/issues/24
-            
+
             _lyricsScraperClient.WithLogger(_loggerFactory);
         }
     }
