@@ -2,6 +2,7 @@
 <p align="center">
 A .NET API service to search for lyrics of a song from the web.
 </p>
+<img src="https://github.com/skuill/LyricsScraperApi/blob/main/resources/swagger.png">
 
 ## Feedback
 
