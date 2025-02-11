@@ -15,13 +15,15 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+    - name: Change directory to src
+      run: cd src
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore --configuration Release --verbosity minimal
     - name: Test (Unit) with Coverage
       run: |
-        dotnet test src/LyricsScraperApi.UnitTest \
+        dotnet test LyricsScraperApi.UnitTest \
           --configuration Release \
           --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults \
