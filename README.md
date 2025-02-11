@@ -1,4 +1,7 @@
-<h1 align="center">LyricsScraperApi</h1> 
+<h1 align="center">LyricsScraperApi</h1>
+<p align="center">
+  <a href="https://www.codefactor.io/repository/github/skuill/lyricsscraperapi"><img src="https://www.codefactor.io/repository/github/skuill/lyricsscraperapi/badge" alt="CodeFactor" /></a>
+</p>
 <p align="center">
 A .NET API service to search for lyrics of a song from the web.
 </p>
@@ -15,7 +18,7 @@ Project is created with:
 * `docker`
 
 ## Built with
-* [LyricsScraperNET](https://github.com/skuill/LyricsScraperNET) - 🎼 A library for .NET that provides an API to search for lyrics of a song from the web
+* [LyricsScraperNET](https://github.com/skuill/LyricsScraperNET) - 🎼 A a versatile .NET library that provides an API for searching song lyrics from the web.
 * [Serilog](https://serilog.net/) - Simple .NET logging with fully-structured events
 * [FakeItEasy](https://fakeiteasy.github.io/) - A .Net dynamic fake framework for creating all types of fake objects, mocks, stubs etc.
 * [Automapper](https://automapper.org/) - A convention-based object-object mapper.
