@@ -5,12 +5,12 @@ using System.Text.Json;
 
 namespace LyricsScraperApi.Middlewares
 {
-    public class ExceptionMiddleware
+    public class GlobalExceptionHandlerMiddleware
     {
-        private readonly ILogger<ExceptionMiddleware> _logger;
+        private readonly ILogger<GlobalExceptionHandlerMiddleware> _logger;
         private readonly RequestDelegate _next;
 
-        public ExceptionMiddleware(ILogger<ExceptionMiddleware> logger, RequestDelegate next)
+        public GlobalExceptionHandlerMiddleware(ILogger<GlobalExceptionHandlerMiddleware> logger, RequestDelegate next)
         {
             _logger = logger;
             _next = next;
@@ -24,7 +24,7 @@ namespace LyricsScraperApi.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, "Unhandled exception");
                 await HandleCustomExceptionResponseAsync(context, ex);
             }
         }

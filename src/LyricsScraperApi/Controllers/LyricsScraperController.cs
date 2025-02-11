@@ -1,12 +1,11 @@
 using AutoMapper;
-using FluentValidation;
 using LyricsScraperApi.Models.Requests;
+using LyricsScraperApi.Validators;
 using LyricsScraperNET;
 using LyricsScraperNET.Models.Requests;
 using LyricsScraperNET.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
-using System.Text;
 
 namespace LyricsScraperApi.Controllers
 {
@@ -15,24 +14,20 @@ namespace LyricsScraperApi.Controllers
     public class LyricsScraperController : ControllerBase
     {
         private readonly ILogger<LyricsScraperController> _logger;
-        private readonly ILoggerFactory _loggerFactory;
 
         private readonly IMapper _mapper;
         private readonly ILyricsScraperClient _lyricsScraperClient;
-        private readonly IValidator<SearchRequestBase> _searchRequestValidator;
+        private readonly ISearchRequestValidatorService _searchRequestValidatorService;
 
-        public LyricsScraperController(ILoggerFactory loggerFactory,
-            ILogger<LyricsScraperController> logger,
+        public LyricsScraperController(ILogger<LyricsScraperController> logger,
             IMapper mapper,
             ILyricsScraperClient lyricsScraperClient,
-            IValidator<SearchRequestBase> searchRequestValidator)
+            ISearchRequestValidatorService searchRequestValidatorService)
         {
-            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _lyricsScraperClient = lyricsScraperClient ?? throw new ArgumentNullException(nameof(lyricsScraperClient));
-            _searchRequestValidator = searchRequestValidator ?? throw new ArgumentNullException(nameof(searchRequestValidator));
+            _searchRequestValidatorService = searchRequestValidatorService ?? throw new ArgumentNullException(nameof(searchRequestValidatorService));
         }
 
         [HttpPost]
@@ -44,14 +39,11 @@ namespace LyricsScraperApi.Controllers
             [FromBody, SwaggerRequestBody("The search request payload", Required = true)] SearchRequestBase searchRequestBase)
         {
             // Search request validation
-            var searchRequestValidation = await ValidateSearchRequest(searchRequestBase);
+            var searchRequestValidation = await _searchRequestValidatorService.ValidateRequest(searchRequestBase);
             if (!searchRequestValidation.IsSuccess)
             {
                 return searchRequestValidation.Result;
             }
-
-            // LyricsScraperClient setting up
-            ConfigureLyricsScraperClient();
 
             var lyricsScraperClientRequest = _mapper.Map<SearchRequest>(searchRequestBase);
 
@@ -68,25 +60,6 @@ namespace LyricsScraperApi.Controllers
             var result = _mapper.Map<Models.Responses.SearchResult>(searchResult);
 
             return Ok(result);
-        }
-
-        private async Task<(bool IsSuccess, IActionResult Result)> ValidateSearchRequest(SearchRequestBase searchRequest)
-        {
-            if (searchRequest == null)
-                return (false, BadRequest("The search request is empty."));
-
-            var requestValidationResult = await _searchRequestValidator.ValidateAsync(searchRequest);
-
-            if (!requestValidationResult.IsValid)
-            {
-                StringBuilder validationErrors = new StringBuilder();
-                foreach (var failure in requestValidationResult.Errors)
-                {
-                    validationErrors.AppendLine("Property " + failure.PropertyName + " failed validation. Error was: " + failure.ErrorMessage);
-                }
-                return (false, BadRequest(validationErrors.ToString()));
-            }
-            return (true, null);
         }
 
         private async Task<(bool IsSuccess, IActionResult Result)> ValidateSearchResult(SearchRequestBase searchRequest, SearchResult? searchResult)
@@ -106,23 +79,16 @@ namespace LyricsScraperApi.Controllers
             if (searchResult.ResponseStatusCode == ResponseStatusCode.Error)
             {
                 _logger.LogWarning($"Lyric not found. Error occured. Search request: {searchRequest.ToString()}. Search response message: {searchResult.ResponseMessage}");
-                return (false, Problem(searchResult.ResponseMessage));
+                return (false, StatusCode(500, searchResult.ResponseMessage));
             }
 
             if (searchResult.ResponseStatusCode == ResponseStatusCode.RegionRestricted)
             {
-                _logger.LogInformation($"Lyric not found. The Lyrics is not available in your regions.");
-                return (false, Problem(searchResult.ResponseMessage));
+                _logger.LogInformation($"Lyric not found. The lyrics is not available in your region. Search request: {searchRequest.ToString()}.");
+                return (false, StatusCode(403, "The lyrics is not available in your region."));
             }
 
             return (true, null);
-        }
-
-        private void ConfigureLyricsScraperClient()
-        {
-            _lyricsScraperClient.WithAllProviders();
-
-            _lyricsScraperClient.WithLogger(_loggerFactory);
         }
     }
 }

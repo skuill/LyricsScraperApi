@@ -49,7 +49,17 @@ builder.Services.AddSwaggerGen(opts =>
 });
 builder.Services.AddAutoMapper(cfg => { cfg.AddProfile<MappingProfile>(); });
 
-builder.Services.AddScoped<ILyricsScraperClient, LyricsScraperClient>();
+builder.Services.AddSingleton<ILyricsScraperClient>(provider =>
+{
+    var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+
+    var client = new LyricsScraperClient()
+        .WithAllProviders();
+    client.WithLogger(loggerFactory);
+
+    return client;
+});
+
 builder.Services.AddScoped<IValidator<SearchRequestBase>, SearchRequestBaseValidator>();
 
 var app = builder.Build();
@@ -61,7 +71,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 
