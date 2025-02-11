@@ -4,7 +4,6 @@ using LyricsScraperApi.Models.Requests;
 using LyricsScraperNET;
 using LyricsScraperNET.Models.Requests;
 using LyricsScraperNET.Models.Responses;
-using LyricsScraperNET.Providers.Models;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Text;
@@ -107,6 +106,12 @@ namespace LyricsScraperApi.Controllers
             if (searchResult.ResponseStatusCode == ResponseStatusCode.Error)
             {
                 _logger.LogWarning($"Lyric not found. Error occured. Search request: {searchRequest.ToString()}. Search response message: {searchResult.ResponseMessage}");
+                return (false, Problem(searchResult.ResponseMessage));
+            }
+
+            if (searchResult.ResponseStatusCode == ResponseStatusCode.RegionRestricted)
+            {
+                _logger.LogInformation($"Lyric not found. The Lyrics is not available in your regions.");
                 return (false, Problem(searchResult.ResponseMessage));
             }
 

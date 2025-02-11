@@ -7,9 +7,11 @@ namespace LyricsScraperApi.UnitTests.Models
     {
         private readonly IMapper _mapper;
 
-        public MappingProfileTests() => _mapper = new MapperConfiguration(cfg => { cfg.AddProfile<MappingProfile>(); }).CreateMapper();
+        public MappingProfileTests()
+            => _mapper = new MapperConfiguration(cfg => { cfg.AddProfile<MappingProfile>(); }).CreateMapper();
 
         [Fact]
-        public void MappingProfile_AssertConfiguration_ShouldBeValid() => _mapper.ConfigurationProvider.AssertConfigurationIsValid();
+        public void MappingProfile_AssertConfiguration_ShouldBeValid()
+            => _mapper.ConfigurationProvider.AssertConfigurationIsValid();
     }
 }
