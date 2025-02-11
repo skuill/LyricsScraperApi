@@ -9,9 +9,6 @@ on:
 jobs:
   lyrics_scraper_api-cicd:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
@@ -19,12 +16,12 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/LyricsScraperApi.sln
     - name: Build
-      run: dotnet build --no-restore --configuration Release --verbosity minimal
+      run: dotnet build src/LyricsScraperApi.sln --no-restore --configuration Release --verbosity minimal
     - name: Test (Unit) with Coverage
       run: |
-        dotnet test LyricsScraperApi.UnitTest \
+        dotnet test src/LyricsScraperApi.UnitTest \
           --configuration Release \
           --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults \
