@@ -1,6 +1,9 @@
 <h1 align="center">LyricsScraperApi</h1>
 <p align="center">
+  <a href="https://github.com/skuill/LyricsScraperApi/actions/workflows/cicd.yml" ><img src="https://github.com/skuill/LyricsScraperApi/actions/workflows/cicd.yml/badge.svg"/>
   <a href="https://www.codefactor.io/repository/github/skuill/lyricsscraperapi"><img src="https://www.codefactor.io/repository/github/skuill/lyricsscraperapi/badge" alt="CodeFactor" /></a>
+  <a href="https://codecov.io/gh/skuill/LyricsScraperApi" ><img src="https://codecov.io/gh/skuill/LyricsScraperApi/graph/badge.svg?token=7S3JL4G5U0"/> 
+ </a>
 </p>
 <p align="center">
 A .NET API service to search for lyrics of a song from the web.
