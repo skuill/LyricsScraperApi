@@ -24,8 +24,7 @@ jobs:
         dotnet test src/LyricsScraperApi.UnitTests/LyricsScraperApi.UnitTests.csproj \
           --configuration Release \
           --collect:"XPlat Code Coverage" \
-          --results-directory ./TestResults \
-          --settings coverlet.runsettings
+          --results-directory ./TestResults
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v5
       with:
