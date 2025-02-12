@@ -9,7 +9,7 @@ EXPOSE 8181
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY src/LyricsScraperApi/LyricsScraperApi.csproj LyricsScraperApi/
+COPY ["LyricsScraperApi/LyricsScraperApi.csproj", "LyricsScraperApi/"]
 RUN dotnet restore "./LyricsScraperApi/LyricsScraperApi.csproj"
 COPY . .
 WORKDIR "/src/LyricsScraperApi"
