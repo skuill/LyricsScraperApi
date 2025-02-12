@@ -61,6 +61,7 @@ builder.Services.AddSingleton<ILyricsScraperClient>(provider =>
 });
 
 builder.Services.AddScoped<IValidator<SearchRequestBase>, SearchRequestBaseValidator>();
+builder.Services.AddScoped<ISearchRequestValidatorService, SearchRequestValidatorService>();
 
 var app = builder.Build();
 
