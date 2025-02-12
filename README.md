@@ -2,7 +2,13 @@
 <p align="center">
   <a href="https://github.com/skuill/LyricsScraperApi/actions/workflows/cicd.yml" ><img src="https://github.com/skuill/LyricsScraperApi/actions/workflows/cicd.yml/badge.svg"/>
   <a href="https://www.codefactor.io/repository/github/skuill/lyricsscraperapi"><img src="https://www.codefactor.io/repository/github/skuill/lyricsscraperapi/badge" alt="CodeFactor" /></a>
-  <a href="https://codecov.io/gh/skuill/LyricsScraperApi" ><img src="https://codecov.io/gh/skuill/LyricsScraperApi/graph/badge.svg?token=7S3JL4G5U0"/> 
+  <a href="https://codecov.io/gh/skuill/LyricsScraperApi" ><img src="https://codecov.io/gh/skuill/LyricsScraperApi/graph/badge.svg?token=7S3JL4G5U0"/>
+  <a href="https://hub.docker.com/r/skuill/lyrics-scraper-api">
+    <img src="https://img.shields.io/docker/v/skuill/lyrics-scraper-api" alt="Docker Image Tag"/>
+  </a>
+  <a href="https://hub.docker.com/r/skuill/lyrics-scraper-api">
+    <img src="https://img.shields.io/docker/pulls/skuill/lyrics-scraper-api" alt="Docker Pulls"/>
+  </a>
  </a>
 </p>
 <p align="center">
@@ -30,3 +36,29 @@ Project is created with:
 
 ## Roadmap
 Visit [issue board](https://github.com/skuill/LyricsScraperApi/issues).
+
+## Running the Project in Docker
+
+You can pull the Docker image for this project from Docker Hub.
+
+### Pull the Docker image
+
+First, pull the pre-built Docker image from Docker Hub
+
+```bash
+docker pull skuill/lyrics-scraper-api
+```
+
+### Run the Docker container
+
+Once the image is pulled, run the container using the following command:
+
+```bash
+docker run -d -p 8180:8180 -p 8181:8181 --name lyrics-scraper-api skuill/lyrics-scraper-api
+```
+
+### Access the API
+
+Once the container is running, your API will be available at the following addresses:
+
+http://localhost:8180 or https://localhost:8181
