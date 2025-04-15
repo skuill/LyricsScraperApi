@@ -1,6 +1,5 @@
 using FluentValidation;
 using LyricsScraperApi.Middlewares;
-using LyricsScraperApi.Models;
 using LyricsScraperApi.Models.Requests;
 using LyricsScraperApi.Validators;
 using LyricsScraperNET;
@@ -47,7 +46,6 @@ builder.Services.AddSwaggerGen(opts =>
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     opts.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
-builder.Services.AddAutoMapper(cfg => { cfg.AddProfile<MappingProfile>(); });
 
 builder.Services.AddSingleton<ILyricsScraperClient>(provider =>
 {

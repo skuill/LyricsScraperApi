@@ -15,6 +15,6 @@
         /// <summary>
         /// The text of the found lyrics. If the lyrics could not be found, an empty value is returned.
         /// </summary>
-        public string LyricTest { get; set; }
+        public string LyricText { get; set; }
     }
 }

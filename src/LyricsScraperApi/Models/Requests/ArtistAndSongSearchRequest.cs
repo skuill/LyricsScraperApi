@@ -1,8 +1,10 @@
-﻿namespace LyricsScraperApi.Models.Requests
+﻿using LyricsScraperApi.Helpers;
+
+namespace LyricsScraperApi.Models.Requests
 {
     public class ArtistAndSongSearchRequest : SearchRequestBase
     {
-        public ArtistAndSongSearchRequest(string requestType) : base(requestType)
+        public ArtistAndSongSearchRequest(string requestType = Constants.ArtistAndSongRequestDescriminatorValue) : base(requestType)
         {
         }
 

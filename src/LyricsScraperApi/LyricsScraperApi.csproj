@@ -18,9 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
-    <PackageReference Include="LyricsScraperNET" Version="2.2.1" />
+    <PackageReference Include="LyricsScraperNET" Version="2.2.2" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />

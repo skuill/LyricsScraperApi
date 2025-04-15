@@ -1,8 +1,7 @@
-using AutoMapper;
+using LyricsScraperApi.Models;
 using LyricsScraperApi.Models.Requests;
 using LyricsScraperApi.Validators;
 using LyricsScraperNET;
-using LyricsScraperNET.Models.Requests;
 using LyricsScraperNET.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -15,17 +14,14 @@ namespace LyricsScraperApi.Controllers
     {
         private readonly ILogger<LyricsScraperController> _logger;
 
-        private readonly IMapper _mapper;
         private readonly ILyricsScraperClient _lyricsScraperClient;
         private readonly ISearchRequestValidatorService _searchRequestValidatorService;
 
         public LyricsScraperController(ILogger<LyricsScraperController> logger,
-            IMapper mapper,
             ILyricsScraperClient lyricsScraperClient,
             ISearchRequestValidatorService searchRequestValidatorService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _lyricsScraperClient = lyricsScraperClient ?? throw new ArgumentNullException(nameof(lyricsScraperClient));
             _searchRequestValidatorService = searchRequestValidatorService ?? throw new ArgumentNullException(nameof(searchRequestValidatorService));
         }
@@ -45,7 +41,7 @@ namespace LyricsScraperApi.Controllers
                 return searchRequestValidation.Result;
             }
 
-            var lyricsScraperClientRequest = _mapper.Map<SearchRequest>(searchRequestBase);
+            var lyricsScraperClientRequest = searchRequestBase.MapToLibrary();
 
             var searchResult = await _lyricsScraperClient.SearchLyricAsync(lyricsScraperClientRequest);
 
@@ -57,7 +53,7 @@ namespace LyricsScraperApi.Controllers
             }
 
             _logger.LogDebug($"Found lyric. {searchRequestBase}");
-            var result = _mapper.Map<Models.Responses.SearchResult>(searchResult);
+            var result = searchResult.MapToApi();
 
             return Ok(result);
         }

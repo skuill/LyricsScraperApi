@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FakeItEasy;
+﻿using FakeItEasy;
 using FluentValidation;
 using LyricsScraperApi.Controllers;
 using LyricsScraperApi.Models.Requests;
@@ -53,7 +52,7 @@ namespace LyricsScraperApi.UnitTests.Controllers
             // Arrange
             var controller = GetLyricsScraperControllerFake();
 
-            var searchRequest = new ArtistAndSongSearchRequest("ArtistAndSong");
+            var searchRequest = new ArtistAndSongSearchRequest();
             searchRequest.Artist = artist;
             searchRequest.Song = song;
 
@@ -70,7 +69,7 @@ namespace LyricsScraperApi.UnitTests.Controllers
             // Arrange
             var controller = GetLyricsScraperControllerFake();
 
-            var searchRequest = new UriSearchRequest("Uri");
+            var searchRequest = new UriSearchRequest();
             searchRequest.Uri = null;
 
             // Act
@@ -85,12 +84,11 @@ namespace LyricsScraperApi.UnitTests.Controllers
         private LyricsScraperController GetLyricsScraperControllerFake()
         {
             ILogger<LyricsScraperController> logger = A.Fake<ILogger<LyricsScraperController>>();
-            IMapper mapper = A.Fake<IMapper>();
             ILyricsScraperClient lyricsScraperClient = A.Fake<ILyricsScraperClient>();
             IValidator<SearchRequestBase> searchRequestValidator = new SearchRequestBaseValidator();
             ISearchRequestValidatorService searchRequestValidatorService = new SearchRequestValidatorService(searchRequestValidator);
 
-            var controller = new LyricsScraperController(logger, mapper, lyricsScraperClient, searchRequestValidatorService);
+            var controller = new LyricsScraperController(logger, lyricsScraperClient, searchRequestValidatorService);
 
             return controller;
         }

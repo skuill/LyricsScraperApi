@@ -1,8 +1,10 @@
-﻿namespace LyricsScraperApi.Models.Requests
+﻿using LyricsScraperApi.Helpers;
+
+namespace LyricsScraperApi.Models.Requests
 {
     public class UriSearchRequest : SearchRequestBase
     {
-        public UriSearchRequest(string requestType) : base(requestType)
+        public UriSearchRequest(string requestType = Constants.UriRequestDescriminatorValue) : base(requestType)
         {
         }
 
