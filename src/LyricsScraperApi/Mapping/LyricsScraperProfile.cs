@@ -4,22 +4,22 @@ using ApiResponses = LyricsScraperApi.Models.Responses;
 using LibraryRequests = LyricsScraperNET.Models.Requests;
 using LibraryResponses = LyricsScraperNET.Models.Responses;
 
-namespace LyricsScraperApi.Models
+namespace LyricsScraperApi.Mapping
 {
-    public static class MappingProfile
+    public static class LyricsScraperProfile
     {
         // Requests
-        public static LibraryRequests.SearchRequest MapToLibrary(this ApiRequests.SearchRequestBase request)
+        public static LibraryRequests.SearchRequest MapToLibrary(this ApiRequests.SearchRequestBaseDto request)
         {
             return request switch
             {
-                ApiRequests.ArtistAndSongSearchRequest artistReq => artistReq.MapToLibrary(),
-                ApiRequests.UriSearchRequest uriReq => uriReq.MapToLibrary(),
+                ApiRequests.ArtistAndSongSearchRequestDto artistReq => artistReq.MapToLibrary(),
+                ApiRequests.UriSearchRequestDto uriReq => uriReq.MapToLibrary(),
                 _ => throw new NotSupportedException("Unsupported request type")
             };
         }
 
-        public static LibraryRequests.ArtistAndSongSearchRequest MapToLibrary(this ApiRequests.ArtistAndSongSearchRequest request)
+        public static LibraryRequests.ArtistAndSongSearchRequest MapToLibrary(this ApiRequests.ArtistAndSongSearchRequestDto request)
         {
             return new LibraryRequests.ArtistAndSongSearchRequest
             (
@@ -29,7 +29,7 @@ namespace LyricsScraperApi.Models
             );
         }
 
-        public static LibraryRequests.UriSearchRequest MapToLibrary(this ApiRequests.UriSearchRequest request)
+        public static LibraryRequests.UriSearchRequest MapToLibrary(this ApiRequests.UriSearchRequestDto request)
         {
             return new LibraryRequests.UriSearchRequest
             (
@@ -39,9 +39,9 @@ namespace LyricsScraperApi.Models
         }
 
         // Responses
-        public static ApiResponses.SearchResult MapToApi(this LibraryResponses.SearchResult result)
+        public static ApiResponses.SearchResultDto MapToApi(this LibraryResponses.SearchResult result)
         {
-            return new ApiResponses.SearchResult
+            return new ApiResponses.SearchResultDto
             {
                 ExternalProvider = result.ExternalProviderType.ToString(),
                 Instrumental = result.Instrumental,

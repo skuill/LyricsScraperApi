@@ -6,10 +6,10 @@ using System.Text.Json.Serialization;
 namespace LyricsScraperApi.Models.Requests
 {
     [SwaggerDiscriminator(Constants.SearchRequestDescriminatorName)]
-    [SwaggerSubType(typeof(ArtistAndSongSearchRequest), DiscriminatorValue = Constants.ArtistAndSongRequestDescriminatorValue)]
-    [SwaggerSubType(typeof(UriSearchRequest), DiscriminatorValue = Constants.UriRequestDescriminatorValue)]
+    [SwaggerSubType(typeof(ArtistAndSongSearchRequestDto), DiscriminatorValue = Constants.ArtistAndSongRequestDescriminatorValue)]
+    [SwaggerSubType(typeof(UriSearchRequestDto), DiscriminatorValue = Constants.UriRequestDescriminatorValue)]
     [JsonConverter(typeof(SearchRequestJsonConverter))]
-    public abstract class SearchRequestBase
+    public abstract class SearchRequestBaseDto
     {
         /// <summary>
         /// Descriminator value for polymorphism and inheritance.
@@ -18,7 +18,7 @@ namespace LyricsScraperApi.Models.Requests
         /// <example>ArtistAndSong</example>
         public string RequestType { get; set; }
 
-        public SearchRequestBase(string requestType)
+        public SearchRequestBaseDto(string requestType)
         {
             RequestType = requestType;
         }

@@ -2,9 +2,9 @@
 
 namespace LyricsScraperApi.Models.Requests
 {
-    public class ArtistAndSongSearchRequest : SearchRequestBase
+    public class ArtistAndSongSearchRequestDto : SearchRequestBaseDto
     {
-        public ArtistAndSongSearchRequest(string requestType = Constants.ArtistAndSongRequestDescriminatorValue) : base(requestType)
+        public ArtistAndSongSearchRequestDto(string requestType = Constants.ArtistAndSongRequestDescriminatorValue) : base(requestType)
         {
         }
 
@@ -25,7 +25,7 @@ namespace LyricsScraperApi.Models.Requests
         /// The type of external provider for which lyrics will be searched.
         /// By default, it is set to All - the search will be performed across all available client providers.
         /// </summary>
-        public ExternalProviders Provider { get; set; } = ExternalProviders.All;
+        public ExternalProvidersDto Provider { get; set; } = ExternalProvidersDto.All;
 
         public override string ToString()
         {

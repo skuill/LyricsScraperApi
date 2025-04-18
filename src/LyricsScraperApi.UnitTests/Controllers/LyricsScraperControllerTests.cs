@@ -1,9 +1,7 @@
 ﻿using FakeItEasy;
-using FluentValidation;
 using LyricsScraperApi.Controllers;
 using LyricsScraperApi.Models.Requests;
-using LyricsScraperApi.Validators;
-using LyricsScraperNET;
+using LyricsScraperApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -12,13 +10,13 @@ namespace LyricsScraperApi.UnitTests.Controllers
     public class LyricsScraperControllerTests
     {
         [Fact]
-        public async void PostSearchLyric_WithNullRequestBody_ShouldBe400BadRequest()
+        public async void PostGetLyric_WithNullRequestBody_ShouldBe400BadRequest()
         {
             // Arrange
             var controller = GetLyricsScraperControllerFake();
 
             // Act
-            var result = await controller.SearchLyric(null);
+            var result = await controller.GetLyric(null);
 
             // Arrange
             Assert.IsType<BadRequestObjectResult>(result);
@@ -27,16 +25,16 @@ namespace LyricsScraperApi.UnitTests.Controllers
         [Theory]
         [InlineData("")]
         [InlineData(null)]
-        public async void PostSearchLyric_WithEmptyDescriminatorInRequestBody_ShouldBe400BadRequest(string descriminatorValue)
+        public async void PostGetLyric_WithEmptyDescriminatorInRequestBody_ShouldBe400BadRequest(string descriminatorValue)
         {
             // Arrange
             var controller = GetLyricsScraperControllerFake();
 
-            SearchRequestBase searchRequest = A.Fake<SearchRequestBase>();
+            SearchRequestBaseDto searchRequest = A.Fake<SearchRequestBaseDto>();
             searchRequest.RequestType = descriminatorValue;
 
             // Act
-            var result = await controller.SearchLyric(searchRequest);
+            var result = await controller.GetLyric(searchRequest);
 
             // Arrange
             Assert.IsType<BadRequestObjectResult>(result);
@@ -47,33 +45,33 @@ namespace LyricsScraperApi.UnitTests.Controllers
         [InlineData(null, "")]
         [InlineData("", null)]
         [InlineData(null, null)]
-        public async void PostSearchLyric_WithMalformedArtistAndSongRequestBody_ShouldBe400BadRequest(string artist, string song)
+        public async void PostGetLyric_WithMalformedArtistAndSongRequestBody_ShouldBe400BadRequest(string artist, string song)
         {
             // Arrange
             var controller = GetLyricsScraperControllerFake();
 
-            var searchRequest = new ArtistAndSongSearchRequest();
+            var searchRequest = new ArtistAndSongSearchRequestDto();
             searchRequest.Artist = artist;
             searchRequest.Song = song;
 
             // Act
-            var result = await controller.SearchLyric(searchRequest);
+            var result = await controller.GetLyric(searchRequest);
 
             // Arrange
             Assert.IsType<BadRequestObjectResult>(result);
         }
 
         [Fact]
-        public async void PostSearchLyric_WithMalformedUriRequestBody_ShouldBe400BadRequest()
+        public async void PostGetLyric_WithMalformedUriRequestBody_ShouldBe400BadRequest()
         {
             // Arrange
             var controller = GetLyricsScraperControllerFake();
 
-            var searchRequest = new UriSearchRequest();
+            var searchRequest = new UriSearchRequestDto();
             searchRequest.Uri = null;
 
             // Act
-            var result = await controller.SearchLyric(searchRequest);
+            var result = await controller.GetLyric(searchRequest);
 
             // Arrange
             Assert.IsType<BadRequestObjectResult>(result);
@@ -84,11 +82,9 @@ namespace LyricsScraperApi.UnitTests.Controllers
         private LyricsScraperController GetLyricsScraperControllerFake()
         {
             ILogger<LyricsScraperController> logger = A.Fake<ILogger<LyricsScraperController>>();
-            ILyricsScraperClient lyricsScraperClient = A.Fake<ILyricsScraperClient>();
-            IValidator<SearchRequestBase> searchRequestValidator = new SearchRequestBaseValidator();
-            ISearchRequestValidatorService searchRequestValidatorService = new SearchRequestValidatorService(searchRequestValidator);
+            ILyricsScraperService lyricsScraperService = A.Fake<ILyricsScraperService>(); ;
 
-            var controller = new LyricsScraperController(logger, lyricsScraperClient, searchRequestValidatorService);
+            var controller = new LyricsScraperController(logger, lyricsScraperService);
 
             return controller;
         }

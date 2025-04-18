@@ -3,11 +3,12 @@ using LyricsScraperApi.Models.Requests;
 
 namespace LyricsScraperApi.Validators
 {
-    public class UriSearchRequestValidator : AbstractValidator<UriSearchRequest>
+    public class UriSearchRequestValidator : AbstractValidator<UriSearchRequestDto>
     {
         public UriSearchRequestValidator()
         {
-            RuleFor(x => x.Uri).NotNull().WithMessage("The {PropertyName} is not specified in the request.");
+            RuleFor(x => x.Uri)
+                .NotNull().WithMessage("The {PropertyName} is not specified in the request.");
         }
     }
 }

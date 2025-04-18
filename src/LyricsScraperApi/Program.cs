@@ -1,81 +1,52 @@
-using FluentValidation;
-using LyricsScraperApi.Middlewares;
-using LyricsScraperApi.Models.Requests;
-using LyricsScraperApi.Validators;
-using LyricsScraperNET;
+using LyricsScraperApi.Extensions;
 using Serilog;
-using System.Reflection;
-using System.Text.Json.Serialization;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-var logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .Enrich.FromLogContext()
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
     .CreateLogger();
-builder.Logging.ClearProviders();
-builder.Logging.AddSerilog(logger);
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-        {
-            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        });
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(opts =>
+try
 {
-    opts.EnableAnnotations(enableAnnotationsForInheritance: true, enableAnnotationsForPolymorphism: true);
-    opts.UseOneOfForPolymorphism();
-    opts.SelectSubTypesUsing(baseType =>
+    Log.Information("Starting up the application...");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Add services to the container.
+    builder.AddPresentation();
+    builder.Services.AddApplication();
+
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
     {
-        if (baseType == typeof(SearchRequestBase))
-        {
-            return new[]
-            {
-                typeof(ArtistAndSongSearchRequest),
-                typeof(UriSearchRequest),
-            };
-        }
+        app.UseDeveloperExceptionPage();
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 
-        return Enumerable.Empty<Type>();
-    });
+    app.UseSerilogRequestLogging();
 
-    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    opts.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
-});
+    app.UseStatusCodePages();
+    app.UseExceptionHandler(_ => { });
+    app.UseHttpsRedirection();
+    app.UseRouting();
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.MapControllers();
+    app.MapHealthChecks("/api/health");
+    app.UseStatusCodePages();
 
-builder.Services.AddSingleton<ILyricsScraperClient>(provider =>
-{
-    var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-
-    var client = new LyricsScraperClient()
-        .WithAllProviders();
-    client.WithLogger(loggerFactory);
-
-    return client;
-});
-
-builder.Services.AddScoped<IValidator<SearchRequestBase>, SearchRequestBaseValidator>();
-builder.Services.AddScoped<ISearchRequestValidatorService, SearchRequestValidatorService>();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.Run();
 }
-
-app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+catch (Exception ex)
+{
+    // Log fatal error
+    Log.Fatal(ex, "Application start-up failed");
+}
+finally
+{
+    // Ensure to flush and close the log
+    Log.Information("Shut down complete");
+    Log.CloseAndFlush();
+}

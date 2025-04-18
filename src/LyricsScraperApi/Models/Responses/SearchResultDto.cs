@@ -1,6 +1,6 @@
 ﻿namespace LyricsScraperApi.Models.Responses
 {
-    public class SearchResult
+    public class SearchResultDto
     {
         /// <summary>
         /// The flag indicates that the search results are for music only, without text.

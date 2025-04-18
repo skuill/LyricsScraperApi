@@ -31,7 +31,7 @@ namespace LyricsScraperApi.UnitTests.Converters
             var converter = new SearchRequestJsonConverter();
 
             // Act
-            var result = converter.CanConvert(typeof(SearchRequestBase));
+            var result = converter.CanConvert(typeof(SearchRequestBaseDto));
 
             // Assert
             Assert.True(result);
@@ -56,11 +56,11 @@ namespace LyricsScraperApi.UnitTests.Converters
             var converter = new SearchRequestJsonConverter();
 
             // Act
-            var result = converter.Read(ref reader, typeof(SearchRequestBase), _options);
+            var result = converter.Read(ref reader, typeof(SearchRequestBaseDto), _options);
 
             // Assert
-            Assert.IsType<ArtistAndSongSearchRequest>(result);
-            var artistRequest = result as ArtistAndSongSearchRequest;
+            Assert.IsType<ArtistAndSongSearchRequestDto>(result);
+            var artistRequest = result as ArtistAndSongSearchRequestDto;
             Assert.Equal("Adele", artistRequest.Artist);
             Assert.Equal("Hello", artistRequest.Song);
         }
@@ -82,13 +82,13 @@ namespace LyricsScraperApi.UnitTests.Converters
             var converter = new SearchRequestJsonConverter();
 
             // Act
-            var result = converter.Read(ref reader, typeof(SearchRequestBase), _options);
+            var result = converter.Read(ref reader, typeof(SearchRequestBaseDto), _options);
 
             // Assert
-            Assert.IsType<UriSearchRequest>(result);
-            var uriRequest = result as UriSearchRequest;
+            Assert.IsType<UriSearchRequestDto>(result);
+            var uriRequest = result as UriSearchRequestDto;
             Assert.Equal(new Uri("http://example.com"), uriRequest.Uri);
-            Assert.Equal(ExternalProviders.All, uriRequest.Provider);
+            Assert.Equal(ExternalProvidersDto.All, uriRequest.Provider);
         }
 
         [Fact]
@@ -106,7 +106,7 @@ namespace LyricsScraperApi.UnitTests.Converters
             {
                 var bytes = Encoding.UTF8.GetBytes(json);
                 var reader = new Utf8JsonReader(bytes);
-                converter.Read(ref reader, typeof(SearchRequestBase), _options);
+                converter.Read(ref reader, typeof(SearchRequestBaseDto), _options);
             });
 
             Assert.Contains("Failed to extract type property", exception.Message);
@@ -128,7 +128,7 @@ namespace LyricsScraperApi.UnitTests.Converters
             {
                 var bytes = Encoding.UTF8.GetBytes(json);
                 var reader = new Utf8JsonReader(bytes);
-                converter.Read(ref reader, typeof(SearchRequestBase), _options);
+                converter.Read(ref reader, typeof(SearchRequestBaseDto), _options);
             });
 
             Assert.Contains("is not a valid", exception.Message);
@@ -139,7 +139,7 @@ namespace LyricsScraperApi.UnitTests.Converters
         {
             // Arrange: Create a fake instance of SearchRequestBase using FakeItEasy.
             // (Assuming SearchRequestBase is abstract; otherwise, you could instantiate a concrete type.)
-            var fakeRequest = A.Fake<SearchRequestBase>();
+            var fakeRequest = A.Fake<SearchRequestBaseDto>();
             var writer = new Utf8JsonWriter(new System.Buffers.ArrayBufferWriter<byte>());
             var converter = new SearchRequestJsonConverter();
 

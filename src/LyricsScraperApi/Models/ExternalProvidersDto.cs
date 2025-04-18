@@ -1,6 +1,6 @@
 ﻿namespace LyricsScraperApi.Models
 {
-    public enum ExternalProviders
+    public enum ExternalProvidersDto
     {
         All,
         AZLyrics,
@@ -10,6 +10,5 @@
         LyricFind,
         KPopLyrics,
         LyricsFreak
-
     }
 }

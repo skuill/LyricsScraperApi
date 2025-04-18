@@ -2,9 +2,9 @@
 
 namespace LyricsScraperApi.Models.Requests
 {
-    public class UriSearchRequest : SearchRequestBase
+    public class UriSearchRequestDto : SearchRequestBaseDto
     {
-        public UriSearchRequest(string requestType = Constants.UriRequestDescriminatorValue) : base(requestType)
+        public UriSearchRequestDto(string requestType = Constants.UriRequestDescriminatorValue) : base(requestType)
         {
         }
 
@@ -18,7 +18,7 @@ namespace LyricsScraperApi.Models.Requests
         /// The type of external provider for which lyrics will be searched.
         /// By default, it is set to All - the search will be performed across all available client providers.
         /// </summary>
-        public ExternalProviders Provider { get; set; } = ExternalProviders.All;
+        public ExternalProvidersDto Provider { get; set; } = ExternalProvidersDto.All;
 
         public override string ToString()
         {

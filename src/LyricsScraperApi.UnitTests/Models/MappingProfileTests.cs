@@ -1,4 +1,5 @@
-﻿using LyricsScraperApi.Models;
+﻿using LyricsScraperApi.Mapping;
+using LyricsScraperApi.Models;
 using LyricsScraperNET.Providers.Models;
 using ApiRequests = LyricsScraperApi.Models.Requests;
 using LibraryRequests = LyricsScraperNET.Models.Requests;
@@ -12,11 +13,11 @@ namespace LyricsScraperApi.UnitTests.Models
         public void MapToLibrary_ArtistAndSongSearchRequest_ShouldMapCorrectly()
         {
             // Arrange
-            var apiRequest = new ApiRequests.ArtistAndSongSearchRequest
+            var apiRequest = new ApiRequests.ArtistAndSongSearchRequestDto
             {
                 Artist = "Muse",
                 Song = "Uprising",
-                Provider = ExternalProviders.AZLyrics
+                Provider = ExternalProvidersDto.AZLyrics
             };
 
             // Act
@@ -33,10 +34,10 @@ namespace LyricsScraperApi.UnitTests.Models
         public void MapToLibrary_UriSearchRequest_ShouldMapCorrectly()
         {
             // Arrange
-            var apiRequest = new ApiRequests.UriSearchRequest
+            var apiRequest = new ApiRequests.UriSearchRequestDto
             {
                 Uri = new Uri("https://lyrics.com/test"),
-                Provider = ExternalProviders.LyricsFreak
+                Provider = ExternalProvidersDto.LyricsFreak
             };
 
             // Act
@@ -52,11 +53,11 @@ namespace LyricsScraperApi.UnitTests.Models
         public void MapToLibrary_SearchRequestBase_ShouldMapArtistAndSongRequest()
         {
             // Arrange
-            ApiRequests.SearchRequestBase request = new ApiRequests.ArtistAndSongSearchRequest
+            ApiRequests.SearchRequestBaseDto request = new ApiRequests.ArtistAndSongSearchRequestDto
             {
                 Artist = "Radiohead",
                 Song = "Creep",
-                Provider = ExternalProviders.Genius
+                Provider = ExternalProvidersDto.Genius
             };
 
             // Act
@@ -94,7 +95,7 @@ namespace LyricsScraperApi.UnitTests.Models
         }
 
         // Dummy unsupported type for testing fallback case
-        private class DummyRequest : ApiRequests.SearchRequestBase
+        private class DummyRequest : ApiRequests.SearchRequestBaseDto
         {
             public DummyRequest(string requestType = "DummyRequest") : base(requestType)
             {
