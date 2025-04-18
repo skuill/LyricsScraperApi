@@ -1,6 +1,6 @@
 ﻿namespace LyricsScraperApi.Models
 {
-    public enum ExternalProvidersDto
+    public enum ExternalProviderTypeDto
     {
         All,
         AZLyrics,

@@ -1,0 +1,34 @@
+### Using for running in docker desktop
+@baseUrl = https://localhost:8181
+
+### Using for running in standalone mode
+#@baseUrl = http://localhost:5277
+
+### Search lyrics by artist and song name
+POST {{baseUrl}}/api/LyricsScraper
+Content-Type: application/json
+{
+  "requestType": "ArtistAndSong",
+  "artist": "Parkway Drive",
+  "song": "Idols And Anchors",
+  "provider": "All"
+}
+
+### Search lyrics by URI
+POST {{baseUrl}}/api/LyricsScraper
+Content-Type: application/json
+{
+  "requestType": "Uri",
+  "uri": "https://genius.com/Parkway-drive-idols-and-anchors-lyrics",
+  "provider": "All"
+}
+
+### Search lyrics for certain music provider (ex. SongLyrics)
+POST {{baseUrl}}/api/LyricsScraper
+Content-Type: application/json
+{
+  "requestType": "ArtistAndSong",
+  "artist": "Parkway Drive",
+  "song": "Wishing Wells",
+  "provider": "SongLyrics"
+}

@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using LyricsScraperApi.Filters;
-using LyricsScraperApi.Helpers;
 using LyricsScraperApi.Handlers;
+using LyricsScraperApi.Helpers;
 using LyricsScraperApi.Models.Requests;
 using LyricsScraperApi.Services;
 using LyricsScraperNET;
@@ -68,9 +68,9 @@ namespace LyricsScraperApi.Extensions
                     {
                         return new[]
                         {
-                typeof(ArtistAndSongSearchRequestDto),
-                typeof(UriSearchRequestDto),
-                };
+                            typeof(ArtistAndSongSearchRequestDto),
+                            typeof(UriSearchRequestDto),
+                        };
                     }
 
                     return Enumerable.Empty<Type>();
@@ -89,9 +89,8 @@ namespace LyricsScraperApi.Extensions
 
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
-            var applicationAssembly = typeof(WebApplicationBuilderExtension).Assembly;
-
             // Fluent Validations
+            var applicationAssembly = typeof(WebApplicationBuilderExtension).Assembly;
             services.AddValidatorsFromAssembly(applicationAssembly, includeInternalTypes: true);
 
             // Registering 3rd party Services
@@ -108,7 +107,7 @@ namespace LyricsScraperApi.Extensions
 
             // Register app Services
             services.AddScoped<ILyricsScraperService, LyricsScraperService>();
-            
+
             services.AddHealthChecks();
 
             return services;

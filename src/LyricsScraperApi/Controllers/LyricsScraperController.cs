@@ -1,5 +1,6 @@
 using LyricsScraperApi.Handlers;
 using LyricsScraperApi.Models.Requests;
+using LyricsScraperApi.Models.Responses;
 using LyricsScraperApi.ResultPattern;
 using LyricsScraperApi.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ namespace LyricsScraperApi.Controllers
         ILyricsScraperService lyricsScraperService) : ControllerBase
     {
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SearchResultDto))]
         public async Task<IActionResult> GetLyric(
             [FromBody, SwaggerRequestBody("The search request payload", Required = true)] SearchRequestBaseDto searchRequestBase)
         {

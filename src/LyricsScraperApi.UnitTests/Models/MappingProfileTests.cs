@@ -17,7 +17,7 @@ namespace LyricsScraperApi.UnitTests.Models
             {
                 Artist = "Muse",
                 Song = "Uprising",
-                Provider = ExternalProvidersDto.AZLyrics
+                Provider = ExternalProviderTypeDto.AZLyrics
             };
 
             // Act
@@ -37,7 +37,7 @@ namespace LyricsScraperApi.UnitTests.Models
             var apiRequest = new ApiRequests.UriSearchRequestDto
             {
                 Uri = new Uri("https://lyrics.com/test"),
-                Provider = ExternalProvidersDto.LyricsFreak
+                Provider = ExternalProviderTypeDto.LyricsFreak
             };
 
             // Act
@@ -57,7 +57,7 @@ namespace LyricsScraperApi.UnitTests.Models
             {
                 Artist = "Radiohead",
                 Song = "Creep",
-                Provider = ExternalProvidersDto.Genius
+                Provider = ExternalProviderTypeDto.Genius
             };
 
             // Act

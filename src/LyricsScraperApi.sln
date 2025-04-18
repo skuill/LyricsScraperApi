@@ -11,6 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LyricsScraperApi.UnitTests"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{00A39ACF-ED92-46C0-861C-E44B422EE3F2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RequestExamples", "RequestExamples", "{E2E8FB73-DB78-4D73-A601-AC5DF1488B7C}"
+	ProjectSection(SolutionItems) = preProject
+		LyricsScraper.http = LyricsScraper.http
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

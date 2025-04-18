@@ -88,7 +88,7 @@ namespace LyricsScraperApi.UnitTests.Converters
             Assert.IsType<UriSearchRequestDto>(result);
             var uriRequest = result as UriSearchRequestDto;
             Assert.Equal(new Uri("http://example.com"), uriRequest.Uri);
-            Assert.Equal(ExternalProvidersDto.All, uriRequest.Provider);
+            Assert.Equal(ExternalProviderTypeDto.All, uriRequest.Provider);
         }
 
         [Fact]

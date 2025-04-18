@@ -1,4 +1,5 @@
-﻿using LyricsScraperNET.Providers.Models;
+﻿using LyricsScraperApi.Models;
+using LyricsScraperNET.Providers.Models;
 using ApiRequests = LyricsScraperApi.Models.Requests;
 using ApiResponses = LyricsScraperApi.Models.Responses;
 using LibraryRequests = LyricsScraperNET.Models.Requests;
@@ -43,7 +44,7 @@ namespace LyricsScraperApi.Mapping
         {
             return new ApiResponses.SearchResultDto
             {
-                ExternalProvider = result.ExternalProviderType.ToString(),
+                ExternalProvider = (ExternalProviderTypeDto)result.ExternalProviderType,
                 Instrumental = result.Instrumental,
                 LyricText = result.LyricText
             };
