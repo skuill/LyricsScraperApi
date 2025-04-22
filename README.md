@@ -54,7 +54,7 @@ docker pull skuill/lyrics-scraper-api
 Once the image is pulled, run the container using the following command:
 
 ```bash
-docker run -d -p 8180:8180 -p 8181:8181 --name lyrics-scraper-api skuill/lyrics-scraper-api
+docker run -d -p 8180:8180 -p 8181:8181 -e ASPNETCORE_HTTP_PORTS=8180 -e ASPNETCORE_HTTPS_PORTS=8181 --name lyrics-scraper-api skuill/lyrics-scraper-api
 ```
 
 ### Access the API
@@ -62,3 +62,8 @@ docker run -d -p 8180:8180 -p 8181:8181 --name lyrics-scraper-api skuill/lyrics-
 Once the container is running, your API will be available at the following addresses:
 
 http://localhost:8180 or https://localhost:8181
+
+
+The healthcheck is configured here:
+
+https://localhost:8181/api/health
