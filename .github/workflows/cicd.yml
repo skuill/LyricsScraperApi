@@ -26,11 +26,19 @@ jobs:
         dotnet test src/LyricsScraperApi.UnitTests/LyricsScraperApi.UnitTests.csproj \
           --configuration Release \
           --collect:"XPlat Code Coverage" \
-          --results-directory ./TestResults
+          --results-directory ./TestResults/Unit
+    - name: Test (Integration) with Coverage
+      run: |
+        dotnet test src/LyricsScraperApi.IntegrationTests/LyricsScraperApi.IntegrationTests.csproj \
+          --configuration Release \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults/Integration
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v5
       with:
-        files: ./TestResults/**/*.cobertura.xml
+        files: |
+          ./TestResults/Unit/**/coverage.cobertura.xml
+          ./TestResults/Integration/**/coverage.cobertura.xml
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: true
 
