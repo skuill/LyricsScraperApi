@@ -1,29 +1,27 @@
 using FluentValidation.Results;
+using LyricsScraperApi.Models.Errors;
 
 namespace LyricsScraperApi.Helpers;
 
 public interface IFormatValidation
 {
-    object FormatValidationErrors(ValidationResult validationResult);
+    ValidationErrorResponseDto FormatValidationErrors(ValidationResult validationResult);
 }
 
 public class FormatValidation : IFormatValidation
 {
-    public object FormatValidationErrors(ValidationResult validationResult)
+    public ValidationErrorResponseDto FormatValidationErrors(ValidationResult validationResult)
     {
-        var errors = validationResult.Errors
-            .Select(e => new
-            {
-                Field = e.PropertyName,
-                Message = e.ErrorMessage
-            })
-            .ToList();
-
-        return new
+        return new ValidationErrorResponseDto
         {
             Title = "Validation Failed",
             Status = StatusCodes.Status400BadRequest,
-            Errors = errors
+            Errors = validationResult.Errors
+                .Select(e => new FieldErrorDto
+                {
+                    Field = e.PropertyName,
+                    Message = e.ErrorMessage
+                }).ToList()
         };
     }
 }

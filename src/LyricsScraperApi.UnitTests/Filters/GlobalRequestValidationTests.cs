@@ -3,6 +3,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using LyricsScraperApi.Filters;
 using LyricsScraperApi.Helpers;
+using LyricsScraperApi.Models.Errors;
 using LyricsScraperApi.Models.Requests;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -80,7 +81,7 @@ namespace LyricsScraperApi.UnitTests.Filters
             A.CallTo(() => validator.ValidateAsync(A<ValidationContext<object>>._, default))
                 .Returns(validationResult);
 
-            var formattedError = new { Message = "Validation Failed" };
+            var formattedError = new ValidationErrorResponseDto { Title = "Validation Failed" };
             A.CallTo(() => formatValidation.FormatValidationErrors(validationResult)).Returns(formattedError);
 
             var httpContext = new DefaultHttpContext();
@@ -189,7 +190,7 @@ namespace LyricsScraperApi.UnitTests.Filters
             A.CallTo(() => validator.ValidateAsync(A<ValidationContext<object>>._, default))
                 .Returns(validationResult);
 
-            var formattedError = new { Message = "Validation Failed" };
+            var formattedError = new ValidationErrorResponseDto { Title = "Validation Failed" };
             A.CallTo(() => formatValidation.FormatValidationErrors(validationResult)).Returns(formattedError);
 
             var httpContext = new DefaultHttpContext();
