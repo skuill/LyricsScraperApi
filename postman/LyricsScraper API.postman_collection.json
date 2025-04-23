@@ -1,0 +1,117 @@
+{
+	"info": {
+		"_postman_id": "fcb6c7cc-6ed3-46d9-84cf-19932953fe94",
+		"name": "LyricsScraper API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18651100"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{host}}:{{port}}/api/health",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LyricsScraper search by Uri",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"requestType\": \"Uri\",\r\n  \"uri\": \"https://genius.com/Parkway-drive-idols-and-anchors-lyrics\",\r\n  \"provider\": \"All\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{host}}:{{port}}/api/LyricsScraper",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"LyricsScraper"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LyricsScraper search by ArtistAndSong",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"requestType\": \"ArtistAndSong\",\r\n  \"artist\": \"Parkway Drive\",\r\n  \"song\": \"Idols And Anchors\",\r\n  \"provider\": \"All\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{host}}:{{port}}/api/LyricsScraper",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"LyricsScraper"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LyricsScraper search by certain provider",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"requestType\": \"ArtistAndSong\",\r\n  \"artist\": \"Parkway Drive\",\r\n  \"song\": \"Wishing Wells\",\r\n  \"provider\": \"SongLyrics\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{host}}:{{port}}/api/LyricsScraper",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"LyricsScraper"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
