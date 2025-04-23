@@ -29,10 +29,11 @@ Project is created with:
 ## Built with
 * [LyricsScraperNET](https://github.com/skuill/LyricsScraperNET) - 🎼 A a versatile .NET library that provides an API for searching song lyrics from the web.
 * [Serilog](https://serilog.net/) - Simple .NET logging with fully-structured events
+* [Shouldly](https://github.com/shouldly/shouldly) - An assertion framework which focuses on giving great error messages when the assertion fails while being simple and terse.
 * [FakeItEasy](https://fakeiteasy.github.io/) - A .Net dynamic fake framework for creating all types of fake objects, mocks, stubs etc.
-* [Automapper](https://automapper.org/) - A convention-based object-object mapper.
 * [FluentValidation](https://fluentvalidation.net/) - A validation library for .NET that uses a fluent interface to construct strongly-typed validation rules.
 * [Swashbuckle.AspNetCore](https://github.com/domaindrivendev/Swashbuckle.AspNetCore) - Swagger tools for documenting APIs built on ASP.NET Core
+* [xUnit](https://xunit.net/) - A free, open source, community-focused unit testing tool for the .NET Framework.
 
 ## Roadmap
 Visit [issue board](https://github.com/skuill/LyricsScraperApi/issues).
