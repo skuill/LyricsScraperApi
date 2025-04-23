@@ -12,7 +12,7 @@
  </a>
 </p>
 <p align="center">
-A .NET API service to search for lyrics of a song from the web.
+A .NET-based Web API that allows users to search for lyrics of a song from multiple external providers (like AZLyrics, Genius, SongLyrics, etc.). It supports both artist/song and direct URL-based search requests.
 </p>
 <img src="https://github.com/skuill/LyricsScraperApi/blob/main/resources/swagger.png">
 
