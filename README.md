@@ -72,3 +72,19 @@ http://localhost:8180/api/health
 ### Using Postman to test API
 
 The Postman environment and collection available in folder [postman](https://github.com/skuill/LyricsScraperApi/tree/main/postman)
+
+## Support
+If you want to support this project or my work in general, you can donate via the links below.
+
+This is always optional! Thank you! 😉
+
+ * [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/skuill)
+ * [!["PayPal Donate Button"](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/VitalyKvashin)
+ * Crypto. Send only on the networks listed, a coin sent on another network may be lost:
+
+| Network | Coins | Address |
+|---|---|---|
+| Bitcoin | BTC | `bc1q02d7p4qhjhjn5mnu99wdfc2j06d364jt8qeq0c` |
+| Ethereum, Base, Arbitrum, Polygon, BNB Chain | ETH, USDT, USDC | `0xa56541B7DF6263ab84c3e1B69bD37f2a6d848412` |
+| Solana | SOL, USDT, USDC | `BZcuV721p9XPsdreiKY9rsmxZDVf8qHNRk3EoPp25nrS` |
+| Tron | USDT (TRC-20) | `TGyoTufYzVPU6igcQmFGwH1SFrNes9q3UP` |
