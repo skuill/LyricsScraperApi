@@ -400,3 +400,6 @@ FodyWeavers.xsd
 # Logs
 logs/
 webapi*.log
+
+# Machine-specific notes for AI coding agents
+CLAUDE.local.md

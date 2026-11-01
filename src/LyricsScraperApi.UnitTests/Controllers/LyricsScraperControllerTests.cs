@@ -1,76 +1,86 @@
-﻿using FakeItEasy;
+using FakeItEasy;
 using LyricsScraperApi.Controllers;
 using LyricsScraperApi.Models.Errors;
 using LyricsScraperApi.Models.Requests;
 using LyricsScraperApi.Models.Responses;
 using LyricsScraperApi.ResultPattern;
 using LyricsScraperApi.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Shouldly;
 
-namespace LyricsScraperApi.UnitTests.Controllers
+namespace LyricsScraperApi.UnitTests.Controllers;
+
+public class LyricsScraperControllerTests
 {
-    public class LyricsScraperControllerTests
+    private readonly ILyricsScraperService _service = A.Fake<ILyricsScraperService>();
+    private readonly ProblemDetailsFactory _problemDetailsFactory = A.Fake<ProblemDetailsFactory>();
+    private readonly LyricsScraperController _controller;
+
+    private readonly ArtistAndSongSearchRequestDto _request = new()
     {
-        [Fact]
-        public async Task GetLyric_WithValidRequest_ReturnsOk()
+        Artist = "Artist",
+        Song = "Song"
+    };
+
+    public LyricsScraperControllerTests()
+    {
+        _controller = new LyricsScraperController(_service)
         {
-            // Arrange
-            var logger = A.Fake<ILogger<LyricsScraperController>>();
-            var service = A.Fake<ILyricsScraperService>();
-            var request = new ArtistAndSongSearchRequestDto
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+            ProblemDetailsFactory = _problemDetailsFactory
+        };
+    }
+
+    [Fact]
+    public async Task GetLyric_WithValidRequest_ReturnsOkAndPassesToken()
+    {
+        // Arrange
+        using var cancellation = new CancellationTokenSource();
+        var expectedResponse = new SearchResultDto { LyricText = "Some lyrics" };
+
+        A.CallTo(() => _service.SearchLyricAsync(_request, cancellation.Token))
+            .Returns(Result<SearchResultDto>.Success(expectedResponse));
+
+        // Act
+        var result = await _controller.GetLyric(_request, cancellation.Token);
+
+        // Assert
+        var okResult = result.ShouldBeOfType<OkObjectResult>();
+        okResult.Value.ShouldBeSameAs(expectedResponse);
+        A.CallTo(() => _service.SearchLyricAsync(_request, cancellation.Token)).MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task GetLyric_WhenServiceFails_ReturnsProblemDetailsWithErrorCode()
+    {
+        // Arrange
+        var error = BaseError.ServiceUnavailable("Lyric.ProvidersUnavailable", "No lyrics provider could answer");
+
+        A.CallTo(() => _service.SearchLyricAsync(_request, A<CancellationToken>._))
+            .Returns(Result<SearchResultDto>.Failure(error));
+        A.CallTo(() => _problemDetailsFactory.CreateProblemDetails(
+                _controller.HttpContext, StatusCodes.Status503ServiceUnavailable, null, null, error.Description, null))
+            .Returns(new ProblemDetails
             {
-                Artist = "Artist",
-                Song = "Song"
-            };
-            var expectedResponse = new SearchResultDto { LyricText = "Some lyrics" };
+                Status = StatusCodes.Status503ServiceUnavailable,
+                Title = "Service Unavailable",
+                Detail = error.Description
+            });
 
-            A.CallTo(() => service.SearchLyricAsync(request))
-                .Returns(Result<SearchResultDto>.Success(expectedResponse));
+        // Act
+        var result = await _controller.GetLyric(_request, CancellationToken.None);
 
-            var controller = new LyricsScraperController(logger, service);
-
-            // Act
-            var result = await controller.GetLyric(request);
-
-            // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal(expectedResponse, okResult.Value);
-        }
-
-        [Fact]
-        public async Task GetLyric_WhenServiceReturnsValidationError_Returns422UnprocessableEntity()
+        // Assert
+        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        objectResult.StatusCode.ShouldBe(StatusCodes.Status503ServiceUnavailable);
+        objectResult.Value.ShouldBeEquivalentTo(new ProblemDetails
         {
-            // Arrange
-            var logger = A.Fake<ILogger<LyricsScraperController>>();
-            var service = A.Fake<ILyricsScraperService>();
-            var request = new ArtistAndSongSearchRequestDto
-            {
-                Artist = "Artist",
-                Song = "Song"
-            };
-
-            var error = BaseError.Validation(
-                title: "Validation Failed",
-                description: "Artist field is required"
-            );
-
-            A.CallTo(() => service.SearchLyricAsync(request))
-                .Returns(Result<SearchResultDto>.Failure(error));
-
-            var controller = new LyricsScraperController(logger, service);
-
-            // Act
-            var result = await controller.GetLyric(request);
-
-            // Assert
-            var objectResult = Assert.IsType<UnprocessableEntityObjectResult>(result);
-            Assert.Equal(422, objectResult.StatusCode);
-
-            var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
-            Assert.Equal("Validation Failed", problemDetails.Title);
-            Assert.Equal("Artist field is required", problemDetails.Detail);
-            Assert.Equal(422, problemDetails.Status);
-        }
+            Status = StatusCodes.Status503ServiceUnavailable,
+            Title = "Service Unavailable",
+            Detail = error.Description,
+            Extensions = { ["errorCode"] = "Lyric.ProvidersUnavailable" }
+        });
     }
 }

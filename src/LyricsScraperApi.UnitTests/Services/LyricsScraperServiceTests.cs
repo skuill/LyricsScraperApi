@@ -1,6 +1,8 @@
-﻿using FakeItEasy;
+using FakeItEasy;
+using LyricsScraperApi.Models;
 using LyricsScraperApi.Models.Errors;
 using LyricsScraperApi.Models.Requests;
+using LyricsScraperApi.Models.Responses;
 using LyricsScraperApi.Services;
 using LyricsScraperNET;
 using LyricsScraperNET.Models.Requests;
@@ -8,165 +10,180 @@ using LyricsScraperNET.Models.Responses;
 using LyricsScraperNET.Providers.Models;
 using Microsoft.Extensions.Logging;
 using Shouldly;
-using System.Reflection;
 
-namespace LyricsScraperApi.UnitTests.Services
+namespace LyricsScraperApi.UnitTests.Services;
+
+public class LyricsScraperServiceTests
 {
-    public class LyricsScraperServiceTests
+    private readonly ILyricsScraperClient _fakeClient;
+    private readonly ILogger<LyricsScraperService> _fakeLogger;
+    private readonly LyricsScraperService _service;
+
+    private readonly ArtistAndSongSearchRequestDto _request = new()
     {
-        private readonly ILyricsScraperClient _fakeClient;
-        private readonly ILogger<LyricsScraperService> _fakeLogger;
-        private readonly LyricsScraperService _service;
+        Artist = "Parkway Drive",
+        Song = "Idols And Anchors",
+        Provider = ExternalProviderTypeDto.Genius
+    };
 
-        public LyricsScraperServiceTests()
+    private static readonly ProviderAttempt[] FailedAttempts =
+    [
+        LyricsScraperModelFactory.ProviderAttempt(ExternalProviderType.Lrclib, ProviderAttemptOutcome.Failed, message: "502 Bad Gateway"),
+        LyricsScraperModelFactory.ProviderAttempt(ExternalProviderType.Genius, ProviderAttemptOutcome.Timeout),
+    ];
+
+    public LyricsScraperServiceTests()
+    {
+        _fakeClient = A.Fake<ILyricsScraperClient>();
+        _fakeLogger = A.Fake<ILogger<LyricsScraperService>>();
+        _service = new LyricsScraperService(_fakeClient, _fakeLogger);
+    }
+
+    [Fact]
+    public async Task SearchLyricAsync_WhenFound_ReturnsLyricAndPassesRequestAndToken()
+    {
+        // Arrange
+        using var cancellation = new CancellationTokenSource();
+        ArrangeSearchResult(LyricsScraperModelFactory.SearchResult(SearchResultCode.Found, "Test lyrics", ExternalProviderType.Genius));
+
+        // Act
+        var result = await _service.SearchLyricAsync(_request, cancellation.Token);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.ShouldBeEquivalentTo(new SearchResultDto
         {
-            _fakeClient = A.Fake<ILyricsScraperClient>();
-            _fakeLogger = A.Fake<ILogger<LyricsScraperService>>();
-            _service = new LyricsScraperService(_fakeClient, _fakeLogger);
-        }
+            Instrumental = false,
+            ExternalProvider = ExternalProviderTypeDto.Genius,
+            LyricText = "Test lyrics"
+        });
+        A.CallTo(() => _fakeClient.SearchLyricAsync(
+                A<SearchRequest>.That.Matches(r => r is ArtistAndSongSearchRequest
+                    && ((ArtistAndSongSearchRequest)r).Artist == "Parkway Drive"
+                    && ((ArtistAndSongSearchRequest)r).Song == "Idols And Anchors"
+                    && ((ArtistAndSongSearchRequest)r).Provider == ExternalProviderType.Genius),
+                cancellation.Token))
+            .MustHaveHappenedOnceExactly();
+        ShouldHaveLogged(LogLevel.Information,
+            "Lyric found by Genius. Search request: Artist: Parkway Drive. Song: Idols And Anchors. Provider: Genius.");
+    }
 
-        [Fact]
-        public async Task SearchLyricAsync_WithValidRequest_ReturnsSuccess()
+    [Fact]
+    public async Task SearchLyricAsync_WhenInstrumental_ReturnsInstrumentalResult()
+    {
+        // Arrange
+        ArrangeSearchResult(LyricsScraperModelFactory.SearchResult(SearchResultCode.Instrumental, providerType: ExternalProviderType.Lrclib));
+
+        // Act
+        var result = await _service.SearchLyricAsync(_request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.ShouldBeEquivalentTo(new SearchResultDto
         {
-            // Arrange
-            string lyricText = "Test lyrics";
-            var request = new ArtistAndSongSearchRequestDto { Artist = "Test", Song = "TestSong" };
-            var response = CreateSearchResult(responseStatus: ResponseStatusCode.Success, lyricText: lyricText);
+            Instrumental = true,
+            ExternalProvider = ExternalProviderTypeDto.Lrclib,
+            LyricText = string.Empty
+        });
+    }
 
-            A.CallTo(() => _fakeClient.SearchLyricAsync(A<SearchRequest>.Ignored, default))
-                .Returns(Task.FromResult(response));
-
-            // Act
-            var result = await _service.SearchLyricAsync(request);
-
-            // Assert
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Value);
-            Assert.Equal(lyricText, result.Value.LyricText);
-        }
-
-        [Fact]
-        public async Task SearchLyricAsync_WhenNoDataFound_ReturnsLyricNotFoundError()
+    [Fact]
+    public async Task SearchLyricAsync_WhenNotFound_ReturnsLyricNotFoundAndLogsProviders()
+    {
+        // Arrange
+        var attempts = new[]
         {
-            // Arrange
-            var request = new ArtistAndSongSearchRequestDto { Artist = "Test", Song = "Unknown" };
-            var response = CreateSearchResult(responseStatus: ResponseStatusCode.NoDataFound);
+            LyricsScraperModelFactory.ProviderAttempt(ExternalProviderType.Lrclib, ProviderAttemptOutcome.NotFound),
+            LyricsScraperModelFactory.ProviderAttempt(ExternalProviderType.Genius, ProviderAttemptOutcome.NotFound),
+        };
+        ArrangeSearchResult(LyricsScraperModelFactory.SearchResult(SearchResultCode.NotFound, responseMessage: "No lyrics", providerAttempts: attempts));
 
-            A.CallTo(() => _fakeClient.SearchLyricAsync(A<SearchRequest>.Ignored, default))
-                .Returns(Task.FromResult(response));
+        // Act
+        var result = await _service.SearchLyricAsync(_request, CancellationToken.None);
 
-            // Act
-            var result = await _service.SearchLyricAsync(request);
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.Error.ShouldBeEquivalentTo(LyricsScraperErrors.LyricNotFound(_request));
+        ShouldHaveLogged(LogLevel.Information,
+            "Lyric not found. Search request: Artist: Parkway Drive. Song: Idols And Anchors. Provider: Genius. Providers: Lrclib: NotFound (0 ms); Genius: NotFound (0 ms)");
+    }
 
-            // Assert
-            Assert.False(result.IsSuccess);
-            result.Error.ShouldBeEquivalentTo(LyricsScraperErrors.LyricNotFound(request));
-        }
+    [Fact]
+    public async Task SearchLyricAsync_WhenAllProvidersFailed_ReturnsProvidersUnavailableAndLogsProviders()
+    {
+        // Arrange
+        ArrangeSearchResult(LyricsScraperModelFactory.SearchResult(SearchResultCode.AllProvidersFailed, responseMessage: "All providers failed", providerAttempts: FailedAttempts));
 
-        [Fact]
-        public async Task SearchLyricAsync_WhenBadRequest_ReturnsBadRequestError()
-        {
-            // Arrange
-            var request = new ArtistAndSongSearchRequestDto { Artist = "???", Song = "" };
-            var response = CreateSearchResult(responseStatus: ResponseStatusCode.BadRequest);
+        // Act
+        var result = await _service.SearchLyricAsync(_request, CancellationToken.None);
 
-            A.CallTo(() => _fakeClient.SearchLyricAsync(A<SearchRequest>.Ignored, default))
-                .Returns(Task.FromResult(response));
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.Error.ShouldBeEquivalentTo(LyricsScraperErrors.ProvidersUnavailable(_request, "All providers failed"));
+        ShouldHaveLogged(LogLevel.Error,
+            "No lyrics provider could answer. Search request: Artist: Parkway Drive. Song: Idols And Anchors. Provider: Genius. Providers: Lrclib: Failed (0 ms): 502 Bad Gateway; Genius: Timeout (0 ms)");
+    }
 
-            // Act
-            var result = await _service.SearchLyricAsync(request);
+    [Theory]
+    [InlineData(SearchResultCode.Values.EmptyRequest)]
+    [InlineData(SearchResultCode.Values.EmptyArtistOrSong)]
+    [InlineData(SearchResultCode.Values.EmptyUri)]
+    [InlineData(SearchResultCode.Values.ProviderNotAvailable)]
+    public async Task SearchLyricAsync_WhenRequestIsInvalid_ReturnsBadRequestError(string code)
+    {
+        // Arrange
+        ArrangeSearchResult(LyricsScraperModelFactory.SearchResult(new SearchResultCode(code), responseMessage: "Bad request"));
 
-            // Assert
-            Assert.False(result.IsSuccess);
-            result.Error.ShouldBeEquivalentTo(LyricsScraperErrors.BadRequestToSearchLyric(request));
-        }
+        // Act
+        var result = await _service.SearchLyricAsync(_request, CancellationToken.None);
 
-        [Fact]
-        public async Task SearchLyricAsync_WhenError_ReturnsSearchError()
-        {
-            // Arrange
-            string responseMessage = "Internal error";
-            var request = new ArtistAndSongSearchRequestDto { Artist = "Test", Song = "ErrorSong" };
-            var response = CreateSearchResult(responseStatus: ResponseStatusCode.Error, responseMessage: responseMessage);
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.Error.ShouldBeEquivalentTo(LyricsScraperErrors.BadRequestToSearchLyric(_request, "Bad request"));
+    }
 
-            A.CallTo(() => _fakeClient.SearchLyricAsync(A<SearchRequest>.Ignored, default))
-                .Returns(Task.FromResult(response));
+    [Theory]
+    [InlineData(SearchResultCode.Values.NoProviders)]
+    [InlineData(SearchResultCode.Values.AllProvidersDisabled)]
+    public async Task SearchLyricAsync_WhenServiceHasNoProviders_ReturnsServiceMisconfiguredError(string code)
+    {
+        // Arrange
+        ArrangeSearchResult(LyricsScraperModelFactory.SearchResult(new SearchResultCode(code), responseMessage: "No providers"));
 
-            // Act
-            var result = await _service.SearchLyricAsync(request);
+        // Act
+        var result = await _service.SearchLyricAsync(_request, CancellationToken.None);
 
-            // Assert
-            Assert.False(result.IsSuccess);
-            result.Error.ShouldBeEquivalentTo(LyricsScraperErrors.LyricSearchError(request, responseMessage));
-        }
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.Error.ShouldBeEquivalentTo(LyricsScraperErrors.ServiceMisconfigured(_request, "No providers"));
+    }
 
-        [Fact]
-        public async Task SearchLyricAsync_WhenRegionRestricted_ReturnsRegionRestrictedError()
-        {
-            // Arrange
-            var request = new ArtistAndSongSearchRequestDto { Artist = "Test", Song = "RestrictedSong" };
-            var response = CreateSearchResult(responseStatus: ResponseStatusCode.RegionRestricted);
+    [Fact]
+    public async Task SearchLyricAsync_WhenCodeIsUnexpected_ReturnsSearchError()
+    {
+        // Arrange
+        ArrangeSearchResult(LyricsScraperModelFactory.SearchResult(SearchResultCode.None, responseMessage: "Internal error"));
 
-            A.CallTo(() => _fakeClient.SearchLyricAsync(A<SearchRequest>.Ignored, default))
-                .Returns(Task.FromResult(response));
+        // Act
+        var result = await _service.SearchLyricAsync(_request, CancellationToken.None);
 
-            // Act
-            var result = await _service.SearchLyricAsync(request);
+        // Assert
+        result.IsSuccess.ShouldBeFalse();
+        result.Error.ShouldBeEquivalentTo(LyricsScraperErrors.LyricSearchError(_request, SearchResultCode.Values.None, "Internal error"));
+    }
 
-            // Assert
-            Assert.False(result.IsSuccess);
-            result.Error.ShouldBeEquivalentTo(LyricsScraperErrors.LyricRegionRestricted(request));
-        }
+    private void ArrangeSearchResult(SearchResult searchResult)
+    {
+        A.CallTo(() => _fakeClient.SearchLyricAsync(A<SearchRequest>._, A<CancellationToken>._))
+            .Returns(searchResult);
+    }
 
-        [Fact]
-        public async Task SearchLyricAsync_WhenEmptyResponseAndNotInstrumental_ReturnsLyricNotFound()
-        {
-            // Arrange
-            var request = new ArtistAndSongSearchRequestDto { Artist = "Test", Song = "SilentSong" };
-            var response = CreateSearchResult(responseStatus: ResponseStatusCode.Success, lyricText: "", instrumental: false);
-
-            A.CallTo(() => _fakeClient.SearchLyricAsync(A<SearchRequest>.Ignored, default))
-                .Returns(Task.FromResult(response));
-
-            // Act
-            var result = await _service.SearchLyricAsync(request);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            result.Error.ShouldBeEquivalentTo(LyricsScraperErrors.LyricNotFound(request));
-        }
-
-        public static SearchResult CreateSearchResult(
-            string? lyricText = "Some lyrics",
-            ResponseStatusCode responseStatus = ResponseStatusCode.Success,
-            string? responseMessage = "OK",
-            bool instrumental = false)
-        {
-            var instance = (SearchResult)Activator.CreateInstance(
-                typeof(SearchResult),
-                nonPublic: true)!;
-
-            SetProperty(instance, "ResponseStatusCode", responseStatus);
-            SetProperty(instance, "ResponseMessage", responseMessage);
-            SetProperty(instance, "Instrumental", instrumental);
-            SetField(instance, "<LyricText>k__BackingField", lyricText);
-            SetField(instance, "<ExternalProviderType>k__BackingField", ExternalProviderType.None);
-
-            return instance;
-        }
-
-        private static void SetProperty<T>(object target, string propName, T value)
-        {
-            typeof(SearchResult)
-                .GetProperty(propName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)!
-                .SetValue(target, value);
-        }
-
-        private static void SetField<T>(object target, string fieldName, T value)
-        {
-            typeof(SearchResult)
-                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!
-                .SetValue(target, value);
-        }
+    private void ShouldHaveLogged(LogLevel level, string message)
+    {
+        A.CallTo(_fakeLogger)
+            .Where(call => call.Method.Name == nameof(ILogger.Log)
+                && call.GetArgument<LogLevel>(0) == level
+                && call.GetArgument<object>(2)!.ToString() == message)
+            .MustHaveHappenedOnceExactly();
     }
 }

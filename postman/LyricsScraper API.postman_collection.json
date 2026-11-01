@@ -112,6 +112,113 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "LyricsScraper search by Lrclib (503 when LRCLIB is down)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"requestType\": \"ArtistAndSong\",\r\n  \"artist\": \"Parkway Drive\",\r\n  \"song\": \"Idols And Anchors\",\r\n  \"provider\": \"Lrclib\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{host}}:{{port}}/api/LyricsScraper",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"LyricsScraper"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LyricsScraper not found (404 Lyric.NotFound)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"requestType\": \"ArtistAndSong\",\r\n  \"artist\": \"Parkway Drive\",\r\n  \"song\": \"No Such Song Qwerty\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{host}}:{{port}}/api/LyricsScraper",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"LyricsScraper"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LyricsScraper without requestType (400)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"artist\": \"Parkway Drive\",\r\n  \"song\": \"Idols And Anchors\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{host}}:{{port}}/api/LyricsScraper",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"api",
+						"LyricsScraper"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "OpenAPI document",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{protocol}}://{{host}}:{{port}}/openapi/v1.json",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"openapi",
+						"v1.json"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }

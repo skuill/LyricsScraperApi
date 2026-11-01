@@ -9,15 +9,6 @@ public static class ResultExtensions
         Func<T, TResult> onSuccess,
         Func<BaseError, TResult> onFailure)
     {
-        return result.IsSuccess ? onSuccess(result.Value!) : onFailure(result.Error!);
-    }
-
-    public static async Task<TResult> MatchAsync<T, TResult>(
-        this Task<Result<T>> resultTask,
-        Func<T, TResult> onSuccess,
-        Func<BaseError, TResult> onFailure)
-    {
-        var result = await resultTask;
-        return result.Match(onSuccess, onFailure);
+        return result.IsSuccess ? onSuccess(result.Value) : onFailure(result.Error!);
     }
 }

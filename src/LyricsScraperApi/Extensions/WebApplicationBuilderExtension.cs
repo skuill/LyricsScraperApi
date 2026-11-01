@@ -1,116 +1,112 @@
-﻿using FluentValidation;
+using FluentValidation;
 using LyricsScraperApi.Filters;
+using LyricsScraperApi.Formatters;
 using LyricsScraperApi.Handlers;
-using LyricsScraperApi.Helpers;
-using LyricsScraperApi.Models.Requests;
+using LyricsScraperApi.Logging;
+using LyricsScraperApi.OpenApi;
 using LyricsScraperApi.Services;
 using LyricsScraperNET;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Serilog;
-using System.Reflection;
+using Serilog.AspNetCore;
 using System.Text.Json.Serialization;
 
-namespace LyricsScraperApi.Extensions
+namespace LyricsScraperApi.Extensions;
+
+public static class WebApplicationBuilderExtension
 {
-    public static class WebApplicationBuilderExtension
+    public static void AddPresentation(this WebApplicationBuilder builder)
     {
-        public static void AddPresentation(this WebApplicationBuilder builder)
+        // Registering the Serilog logger
+        builder.Services.AddSerilog((services, loggerConfiguration) =>
         {
-            // Registering the Serilog logger
-            builder.Host.UseSerilog((context, loggerConfiguration) =>
-            {
-                loggerConfiguration.ReadFrom.Configuration(context.Configuration);
-            });
+            loggerConfiguration.ReadFrom.Configuration(builder.Configuration);
+        });
 
-            // Registering the Response Compression
-            builder.Services.AddResponseCompression(options =>
-            {
-                options.EnableForHttps = true;
-                options.Providers.Add<GzipCompressionProvider>();
-            });
+        // Read by app.UseSerilogRequestLogging(): quiet health checks, errors as Error.
+        builder.Services.Configure<RequestLoggingOptions>(options => options.GetLevel = RequestLogLevel.Get);
 
-            // Registering the exception handler
-            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-            builder.Services.AddProblemDetails(options =>
-            {
-                options.CustomizeProblemDetails = context =>
-                {
-                    context.ProblemDetails.Instance =
-                        $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
-
-                    var activity = context.HttpContext.Features.Get<IHttpActivityFeature>()?.Activity;
-                    context.ProblemDetails.Extensions.TryAdd("traceId", activity?.Id);
-                };
-            });
-
-            // Registering the services
-            builder.Services
-                .AddControllers(options =>
-                {
-                    // Register the filter globally
-                    options.Filters.AddService<GlobalRequestValidation>();
-                })
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                });
-
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(opts =>
-            {
-                opts.EnableAnnotations(enableAnnotationsForInheritance: true, enableAnnotationsForPolymorphism: true);
-                opts.UseOneOfForPolymorphism();
-                opts.SelectSubTypesUsing(baseType =>
-                {
-                    if (baseType == typeof(SearchRequestBaseDto))
-                    {
-                        return new[]
-                        {
-                            typeof(ArtistAndSongSearchRequestDto),
-                            typeof(UriSearchRequestDto),
-                        };
-                    }
-
-                    return Enumerable.Empty<Type>();
-                });
-
-                var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                opts.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
-            });
-
-            builder.Services.AddHttpContextAccessor();
-
-            // Registering the Services
-            builder.Services.AddScoped<GlobalRequestValidation>();
-            builder.Services.AddScoped<IFormatValidation, FormatValidation>();
-        }
-
-        public static IServiceCollection AddApplication(this IServiceCollection services)
+        // Registering the Response Compression
+        builder.Services.AddResponseCompression(options =>
         {
-            // Fluent Validations
-            var applicationAssembly = typeof(WebApplicationBuilderExtension).Assembly;
-            services.AddValidatorsFromAssembly(applicationAssembly, includeInternalTypes: true);
+            options.EnableForHttps = true;
+            options.Providers.Add<GzipCompressionProvider>();
+        });
 
-            // Registering 3rd party Services
-            services.AddSingleton<ILyricsScraperClient>(provider =>
+        // Registering the exception handler
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+        builder.Services.AddProblemDetails(options =>
+        {
+            options.CustomizeProblemDetails = context =>
             {
-                var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+                context.ProblemDetails.Instance =
+                    $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
 
-                var client = new LyricsScraperClient()
-                    .WithAllProviders();
-                client.WithLogger(loggerFactory);
+                var activity = context.HttpContext.Features.Get<IHttpActivityFeature>()?.Activity;
+                context.ProblemDetails.Extensions.TryAdd("traceId", activity?.Id);
+            };
+        });
 
-                return client;
+        // Registering the services
+        builder.Services
+            .AddControllers(options =>
+            {
+                // Register the filter globally
+                options.Filters.AddService<GlobalRequestValidation>();
+                // FluentValidation checks the requests. The implicit [Required] of non-nullable reference types would
+                // only add "The searchRequestBase field is required." next to the real JSON error. An empty body or
+                // the JSON null is still a 400 ("A non-empty request body is required.").
+                options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+            })
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                // requestType may come after the other properties of a search request, as in 1.x.
+                options.JsonSerializerOptions.AllowOutOfOrderMetadataProperties = true;
             });
+        // PostConfigure: the JSON formatter is added by MVC when the options are built.
+        builder.Services.PostConfigure<MvcOptions>(SearchRequestJsonInputFormatter.Replace);
 
-            // Register app Services
-            services.AddScoped<ILyricsScraperService, LyricsScraperService>();
+        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+        builder.Services.AddOpenApi(options =>
+        {
+            options.CreateSchemaReferenceId = SchemaReferenceIds.Create;
+            options.AddDocumentTransformer<DocumentInfoTransformer>();
+            options.AddOperationTransformer<SearchExamplesOperationTransformer>();
+            options.AddSchemaTransformer<EnumSchemaTransformer>();
+            options.AddSchemaTransformer<ProblemDetailsSchemaTransformer>();
+            options.AddSchemaTransformer<ValidatorRequiredSchemaTransformer>();
+        });
 
-            services.AddHealthChecks();
+        // Registering the Services
+        builder.Services.AddScoped<GlobalRequestValidation>();
+    }
 
-            return services;
-        }
+    public static IServiceCollection AddApplication(this IServiceCollection services)
+    {
+        // Fluent Validations
+        var applicationAssembly = typeof(WebApplicationBuilderExtension).Assembly;
+        services.AddValidatorsFromAssembly(applicationAssembly, includeInternalTypes: true);
+
+        // Registering 3rd party Services
+        services.AddSingleton<ILyricsScraperClient>(provider =>
+        {
+            var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+
+            var client = new LyricsScraperClient()
+                .WithAllProviders();
+            client.WithLogger(loggerFactory);
+
+            return client;
+        });
+
+        // Register app Services
+        services.AddScoped<ILyricsScraperService, LyricsScraperService>();
+
+        services.AddHealthChecks();
+
+        return services;
     }
 }

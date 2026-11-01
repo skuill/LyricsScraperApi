@@ -1,7 +1,10 @@
-### Using for running in docker desktop
-@baseUrl = https://localhost:8181
+### Docker image: docker run -d -p 8180:8180 --name lyrics-scraper-api skuill/lyrics-scraper-api:2
+@baseUrl = http://localhost:8180
 
-### Using for running in standalone mode
+### Visual Studio, "Docker Compose" profile (HTTPS with the development certificate)
+#@baseUrl = https://localhost:8181
+
+### Using for running in standalone mode (dotnet run)
 #@baseUrl = http://localhost:5277
 
 ### Search lyrics by artist and song name
@@ -31,4 +34,21 @@ Content-Type: application/json
   "artist": "Parkway Drive",
   "song": "Wishing Wells",
   "provider": "SongLyrics"
+}
+
+### Not found: 404 with errorCode Lyric.NotFound
+POST {{baseUrl}}/api/LyricsScraper
+Content-Type: application/json
+{
+  "requestType": "ArtistAndSong",
+  "artist": "Parkway Drive",
+  "song": "No Such Song Qwerty"
+}
+
+### Without requestType: 400 with the available values
+POST {{baseUrl}}/api/LyricsScraper
+Content-Type: application/json
+{
+  "artist": "Parkway Drive",
+  "song": "Idols And Anchors"
 }

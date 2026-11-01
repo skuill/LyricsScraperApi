@@ -1,26 +1,14 @@
-﻿using LyricsScraperApi.Converters;
 using LyricsScraperApi.Helpers;
-using Swashbuckle.AspNetCore.Annotations;
 using System.Text.Json.Serialization;
 
-namespace LyricsScraperApi.Models.Requests
-{
-    [SwaggerDiscriminator(Constants.SearchRequestDescriminatorName)]
-    [SwaggerSubType(typeof(ArtistAndSongSearchRequestDto), DiscriminatorValue = Constants.ArtistAndSongRequestDescriminatorValue)]
-    [SwaggerSubType(typeof(UriSearchRequestDto), DiscriminatorValue = Constants.UriRequestDescriminatorValue)]
-    [JsonConverter(typeof(SearchRequestJsonConverter))]
-    public abstract class SearchRequestBaseDto
-    {
-        /// <summary>
-        /// Descriminator value for polymorphism and inheritance.
-        /// Available values: ArtistAndSong, Uri.
-        /// </summary>
-        /// <example>ArtistAndSong</example>
-        public string RequestType { get; set; }
+namespace LyricsScraperApi.Models.Requests;
 
-        public SearchRequestBaseDto(string requestType)
-        {
-            RequestType = requestType;
-        }
-    }
+/// <summary>
+/// A search request. The property <c>requestType</c> selects the kind of search: <c>ArtistAndSong</c> or <c>Uri</c>.
+/// </summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = Constants.SearchRequestDiscriminatorName)]
+[JsonDerivedType(typeof(ArtistAndSongSearchRequestDto), Constants.ArtistAndSongRequestDiscriminatorValue)]
+[JsonDerivedType(typeof(UriSearchRequestDto), Constants.UriRequestDiscriminatorValue)]
+public abstract class SearchRequestBaseDto
+{
 }
