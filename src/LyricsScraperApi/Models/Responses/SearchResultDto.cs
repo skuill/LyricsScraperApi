@@ -1,4 +1,4 @@
-﻿namespace LyricsScraperApi.Models.Responses
+namespace LyricsScraperApi.Models.Responses
 {
     public class SearchResultDto
     {
@@ -13,8 +13,8 @@
         public ExternalProviderTypeDto ExternalProvider { get; set; }
 
         /// <summary>
-        /// The text of the found lyrics. If the lyrics could not be found, an empty value is returned.
+        /// The text of the found lyrics. Empty for an instrumental.
         /// </summary>
-        public string LyricText { get; set; }
+        public string LyricText { get; set; } = string.Empty;
     }
 }

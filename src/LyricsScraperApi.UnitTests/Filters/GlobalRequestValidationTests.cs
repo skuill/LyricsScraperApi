@@ -1,230 +1,141 @@
-﻿using FakeItEasy;
+using FakeItEasy;
 using FluentValidation;
 using FluentValidation.Results;
 using LyricsScraperApi.Filters;
-using LyricsScraperApi.Helpers;
-using LyricsScraperApi.Models.Errors;
 using LyricsScraperApi.Models.Requests;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
+using Shouldly;
 
 namespace LyricsScraperApi.UnitTests.Filters
 {
     public class GlobalRequestValidationTests
     {
+        private readonly ProblemDetailsFactory _problemDetailsFactory = A.Fake<ProblemDetailsFactory>();
+
         [Fact]
         public async Task OnActionExecutionAsync_ValidRequest_CallsNext()
         {
             // Arrange
-            var formatValidation = A.Fake<IFormatValidation>();
             var validator = A.Fake<IValidator<ArtistAndSongSearchRequestDto>>();
-            var requestDto = new ArtistAndSongSearchRequestDto { Artist = "Artist", Song = "Song" };
-
-            A.CallTo(() => validator.ValidateAsync(A<ValidationContext<object>>._, default))
+            A.CallTo(() => validator.ValidateAsync(A<ValidationContext<object>>._, A<CancellationToken>._))
                 .Returns(new ValidationResult());
 
-            var httpContext = new DefaultHttpContext();
-            var services = new ServiceCollection();
-            services.AddSingleton(typeof(IValidator<ArtistAndSongSearchRequestDto>), validator);
-            httpContext.RequestServices = services.BuildServiceProvider();
-
-            var actionContext = new ActionContext
-            {
-                HttpContext = httpContext,
-                RouteData = new Microsoft.AspNetCore.Routing.RouteData(),
-                ActionDescriptor = new ControllerActionDescriptor(),
-            };
-
-            var actionArguments = new Dictionary<string, object>
-            {
-                { "request", requestDto }
-            };
-
-            var context = new ActionExecutingContext(
-                actionContext,
-                new List<IFilterMetadata>(),
-                actionArguments,
-                controller: null
-            );
-
-            var executedContext = new ActionExecutedContext(actionContext, new List<IFilterMetadata>(), controller: null);
+            var context = CreateContext(new ArtistAndSongSearchRequestDto { Artist = "Artist", Song = "Song" },
+                services => services.AddSingleton(validator));
             var nextCalled = false;
-            Task<ActionExecutedContext> Next() { nextCalled = true; return Task.FromResult(executedContext); }
-
-            var filter = new GlobalRequestValidation(formatValidation);
 
             // Act
-            await filter.OnActionExecutionAsync(context, Next);
+            await new GlobalRequestValidation(_problemDetailsFactory).OnActionExecutionAsync(context, () =>
+            {
+                nextCalled = true;
+                return Task.FromResult(new ActionExecutedContext(context, [], controller: null!));
+            });
 
             // Assert
-            Assert.True(nextCalled);
-            Assert.Null(context.Result);
+            nextCalled.ShouldBeTrue();
+            context.Result.ShouldBeNull();
+            A.CallTo(_problemDetailsFactory).MustNotHaveHappened();
         }
 
         [Fact]
-        public async Task OnActionExecutionAsync_InvalidRequest_ReturnsBadRequest()
+        public async Task OnActionExecutionAsync_InvalidRequest_ReturnsValidationProblemWithJsonFieldNames()
         {
             // Arrange
-            var formatValidation = A.Fake<IFormatValidation>();
             var validator = A.Fake<IValidator<ArtistAndSongSearchRequestDto>>();
-            var requestDto = new ArtistAndSongSearchRequestDto { Artist = "", Song = "" };
+            A.CallTo(() => validator.ValidateAsync(A<ValidationContext<object>>._, A<CancellationToken>._))
+                .Returns(new ValidationResult(
+                [
+                    new ValidationFailure("Artist", "Artist is required"),
+                    new ValidationFailure("Song", "Song is required")
+                ]));
 
-            var validationResult = new ValidationResult(new List<ValidationFailure>
-            {
-                new ValidationFailure("Artist", "Artist is required"),
-                new ValidationFailure("Song", "Song is required")
-            });
-
-            A.CallTo(() => validator.ValidateAsync(A<ValidationContext<object>>._, default))
-                .Returns(validationResult);
-
-            var formattedError = new ValidationErrorResponseDto { Title = "Validation Failed" };
-            A.CallTo(() => formatValidation.FormatValidationErrors(validationResult)).Returns(formattedError);
-
-            var httpContext = new DefaultHttpContext();
-            var services = new ServiceCollection();
-            services.AddSingleton(typeof(IValidator<ArtistAndSongSearchRequestDto>), validator);
-            httpContext.RequestServices = services.BuildServiceProvider();
-
-            var actionContext = new ActionContext
-            {
-                HttpContext = httpContext,
-                RouteData = new Microsoft.AspNetCore.Routing.RouteData(),
-                ActionDescriptor = new ControllerActionDescriptor(),
-            };
-
-            var actionArguments = new Dictionary<string, object>
-            {
-                { "request", requestDto }
-            };
-
-            var context = new ActionExecutingContext(
-                actionContext,
-                new List<IFilterMetadata>(),
-                actionArguments,
-                controller: null
-            );
-
-            var filter = new GlobalRequestValidation(formatValidation);
+            var context = CreateContext(new ArtistAndSongSearchRequestDto(), services => services.AddSingleton(validator));
+            var problemDetails = new ValidationProblemDetails();
+            ModelStateDictionary? modelState = null;
+            A.CallTo(() => _problemDetailsFactory.CreateValidationProblemDetails(
+                    context.HttpContext, A<ModelStateDictionary>._, StatusCodes.Status400BadRequest, null, null, null, null))
+                .Invokes((HttpContext _, ModelStateDictionary state, int? _, string? _, string? _, string? _, string? _) => modelState = state)
+                .Returns(problemDetails);
 
             // Act
-            await filter.OnActionExecutionAsync(context, () => Task.FromResult<ActionExecutedContext>(null));
+            await new GlobalRequestValidation(_problemDetailsFactory).OnActionExecutionAsync(context, NextMustNotBeCalled);
 
             // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(context.Result);
-            Assert.Equal(formattedError, badRequestResult.Value);
+            context.Result.ShouldBeOfType<BadRequestObjectResult>().Value.ShouldBeSameAs(problemDetails);
+            modelState.ShouldNotBeNull();
+            modelState
+                .OrderBy(e => e.Key)
+                .SelectMany(e => e.Value!.Errors.Select(error => $"{e.Key}: {error.ErrorMessage}"))
+                .ShouldBe(["artist: Artist is required", "song: Song is required"]);
         }
 
         [Fact]
-        public async Task OnActionExecutionAsync_ValidInheritedRequest_CallsNext()
+        public async Task OnActionExecutionAsync_RequestWithValidatorOfBaseType_UsesBaseValidator()
         {
             // Arrange
-            var formatValidation = A.Fake<IFormatValidation>();
             var validator = A.Fake<IValidator<SearchRequestBaseDto>>();
-            SearchRequestBaseDto requestDto = new ArtistAndSongSearchRequestDto
-            {
-                Artist = "Artist",
-                Song = "Song"
-            };
+            A.CallTo(() => validator.ValidateAsync(A<ValidationContext<object>>._, A<CancellationToken>._))
+                .Returns(new ValidationResult([new ValidationFailure("Uri", "The Uri is not specified in the request.")]));
 
-            A.CallTo(() => validator.ValidateAsync(A<ValidationContext<object>>._, default))
-                .Returns(new ValidationResult());
+            var context = CreateContext(new UriSearchRequestDto(), services => services.AddSingleton(validator));
+            var problemDetails = new ValidationProblemDetails();
+            A.CallTo(() => _problemDetailsFactory.CreateValidationProblemDetails(
+                    A<HttpContext>._, A<ModelStateDictionary>._, A<int?>._, A<string?>._, A<string?>._, A<string?>._, A<string?>._))
+                .Returns(problemDetails);
 
-            var httpContext = new DefaultHttpContext();
-            var services = new ServiceCollection();
-            services.AddSingleton(typeof(IValidator<SearchRequestBaseDto>), validator);
-            httpContext.RequestServices = services.BuildServiceProvider();
+            // Act
+            await new GlobalRequestValidation(_problemDetailsFactory).OnActionExecutionAsync(context, NextMustNotBeCalled);
 
-            var actionContext = new ActionContext
-            {
-                HttpContext = httpContext,
-                RouteData = new Microsoft.AspNetCore.Routing.RouteData(),
-                ActionDescriptor = new ControllerActionDescriptor(),
-            };
+            // Assert
+            context.Result.ShouldBeOfType<BadRequestObjectResult>().Value.ShouldBeSameAs(problemDetails);
+            A.CallTo(() => validator.ValidateAsync(A<ValidationContext<object>>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+        }
 
-            var actionArguments = new Dictionary<string, object>
-            {
-                { "request", requestDto }
-            };
-
-            var context = new ActionExecutingContext(
-                actionContext,
-                new List<IFilterMetadata>(),
-                actionArguments,
-                controller: null
-            );
-
-            var executedContext = new ActionExecutedContext(actionContext, new List<IFilterMetadata>(), controller: null);
+        [Fact]
+        public async Task OnActionExecutionAsync_RequestWithoutValidator_CallsNext()
+        {
+            // Arrange
+            var context = CreateContext(new UriSearchRequestDto(), _ => { });
             var nextCalled = false;
-            Task<ActionExecutedContext> Next() { nextCalled = true; return Task.FromResult(executedContext); }
-
-            var filter = new GlobalRequestValidation(formatValidation);
 
             // Act
-            await filter.OnActionExecutionAsync(context, Next);
-
-            // Assert
-            Assert.True(nextCalled);
-            Assert.Null(context.Result);
-        }
-
-        [Fact]
-        public async Task OnActionExecutionAsync_InvalidInheritedRequest_ReturnsBadRequest()
-        {
-            // Arrange
-            var formatValidation = A.Fake<IFormatValidation>();
-            var validator = A.Fake<IValidator<SearchRequestBaseDto>>();
-            SearchRequestBaseDto requestDto = new UriSearchRequestDto
+            await new GlobalRequestValidation(_problemDetailsFactory).OnActionExecutionAsync(context, () =>
             {
-                Uri = null
-            };
-
-            var validationResult = new ValidationResult(new List<ValidationFailure>
-            {
-                new ValidationFailure("Uri", "The Uri is not specified in the request.")
+                nextCalled = true;
+                return Task.FromResult(new ActionExecutedContext(context, [], controller: null!));
             });
 
-            A.CallTo(() => validator.ValidateAsync(A<ValidationContext<object>>._, default))
-                .Returns(validationResult);
+            // Assert
+            nextCalled.ShouldBeTrue();
+            context.Result.ShouldBeNull();
+        }
 
-            var formattedError = new ValidationErrorResponseDto { Title = "Validation Failed" };
-            A.CallTo(() => formatValidation.FormatValidationErrors(validationResult)).Returns(formattedError);
-
-            var httpContext = new DefaultHttpContext();
+        private static ActionExecutingContext CreateContext(object request, Action<IServiceCollection> registerValidators)
+        {
             var services = new ServiceCollection();
-            services.AddSingleton(typeof(IValidator<SearchRequestBaseDto>), validator);
-            httpContext.RequestServices = services.BuildServiceProvider();
+            registerValidators(services);
 
             var actionContext = new ActionContext
             {
-                HttpContext = httpContext,
+                HttpContext = new DefaultHttpContext { RequestServices = services.BuildServiceProvider() },
                 RouteData = new Microsoft.AspNetCore.Routing.RouteData(),
                 ActionDescriptor = new ControllerActionDescriptor(),
             };
 
-            var actionArguments = new Dictionary<string, object>
-            {
-                { "request", requestDto }
-            };
-
-            var context = new ActionExecutingContext(
+            return new ActionExecutingContext(
                 actionContext,
-                new List<IFilterMetadata>(),
-                actionArguments,
-                controller: null
-            );
-
-            var filter = new GlobalRequestValidation(formatValidation);
-
-            // Act
-            await filter.OnActionExecutionAsync(context, () => Task.FromResult<ActionExecutedContext>(null));
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(context.Result);
-            Assert.Equal(formattedError, badRequestResult.Value);
+                [],
+                new Dictionary<string, object?> { { "request", request } },
+                controller: null!);
         }
+
+        private static Task<ActionExecutedContext> NextMustNotBeCalled()
+            => throw new InvalidOperationException("The action must not run for an invalid request.");
     }
 }

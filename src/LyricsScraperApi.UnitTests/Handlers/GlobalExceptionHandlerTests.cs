@@ -1,86 +1,141 @@
-﻿using FakeItEasy;
+using FakeItEasy;
 using LyricsScraperApi.Handlers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
+using Shouldly;
 
 namespace LyricsScraperApi.UnitTests.Handlers
 {
     public class GlobalExceptionHandlerTests
     {
-        [Fact]
-        public async Task TryHandleAsync_ShouldReturnBadRequest_ForArgumentException()
+        private readonly IProblemDetailsService _problemDetailsService = A.Fake<IProblemDetailsService>();
+        private ProblemDetailsContext? _writtenContext;
+
+        public GlobalExceptionHandlerTests()
         {
-            // Arrange
-            var logger = A.Fake<ILogger<GlobalExceptionHandler>>();
-            var handler = new GlobalExceptionHandler(logger);
-            var context = new DefaultHttpContext();
-
-            var exception = new ArgumentException("Invalid parameter");
-
-            var responseStream = new MemoryStream();
-            context.Response.Body = responseStream;
-
-            // Act
-            var result = await handler.TryHandleAsync(context, exception, CancellationToken.None);
-
-            // Assert
-            Assert.True(result);
-            Assert.Equal(StatusCodes.Status400BadRequest, context.Response.StatusCode);
-
-            responseStream.Seek(0, SeekOrigin.Begin);
-            var json = await new StreamReader(responseStream).ReadToEndAsync();
-            var problem = JsonSerializer.Deserialize<ProblemDetails>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            Assert.NotNull(problem);
-            Assert.Equal("Invalid parameter", problem.Detail);
-            Assert.Equal("ArgumentException", problem.Type);
-            Assert.Equal(400, problem.Status);
-
-            //A.CallTo(() => logger.Log(
-            //    LogLevel.Error,
-            //    A<EventId>._,
-            //    A<object>._,
-            //    exception,
-            //    A<Func<object, Exception, string>>._)).MustHaveHappened();
+            A.CallTo(() => _problemDetailsService.TryWriteAsync(A<ProblemDetailsContext>._))
+                .Invokes((ProblemDetailsContext context) => _writtenContext = context)
+                .Returns(true);
         }
 
         [Fact]
-        public async Task TryHandleAsync_ShouldReturnInternalServerError_ForUnknownException()
+        public async Task TryHandleAsync_ArgumentException_WritesBadRequestWithMessage()
         {
             // Arrange
-            var logger = A.Fake<ILogger<GlobalExceptionHandler>>();
-            var handler = new GlobalExceptionHandler(logger);
             var context = new DefaultHttpContext();
-
-            var exception = new Exception("Something went wrong");
-
-            var responseStream = new MemoryStream();
-            context.Response.Body = responseStream;
+            var exception = new ArgumentException("Invalid parameter");
 
             // Act
-            var result = await handler.TryHandleAsync(context, exception, CancellationToken.None);
+            var handled = await CreateHandler(Environments.Production).TryHandleAsync(context, exception, CancellationToken.None);
 
             // Assert
-            Assert.True(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, context.Response.StatusCode);
+            handled.ShouldBeTrue();
+            context.Response.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
+            ShouldHaveWritten(context, exception, new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "An error occurred",
+                Detail = "Invalid parameter"
+            });
+        }
 
-            responseStream.Seek(0, SeekOrigin.Begin);
-            var json = await new StreamReader(responseStream).ReadToEndAsync();
-            var problem = JsonSerializer.Deserialize<ProblemDetails>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        [Fact]
+        public async Task TryHandleAsync_UnknownExceptionInProduction_WritesInternalServerErrorWithoutMessage()
+        {
+            // Arrange
+            var context = new DefaultHttpContext();
+            var exception = new Exception("Connection string with a password");
 
-            Assert.NotNull(problem);
-            Assert.Equal("Something went wrong", problem.Detail);
-            Assert.Equal("Exception", problem.Type);
-            Assert.Equal(500, problem.Status);
+            // Act
+            var handled = await CreateHandler(Environments.Production).TryHandleAsync(context, exception, CancellationToken.None);
 
-            //A.CallTo(() => logger.Log(
-            //    LogLevel.Error,
-            //    A<EventId>._,
-            //    A<object>._,
-            //    exception,
-            //    A<Func<object, Exception, string>>._)).MustHaveHappened();
+            // Assert
+            handled.ShouldBeTrue();
+            context.Response.StatusCode.ShouldBe(StatusCodes.Status500InternalServerError);
+            ShouldHaveWritten(context, exception, new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "An error occurred",
+                Detail = null
+            });
+        }
+
+        [Fact]
+        public async Task TryHandleAsync_UnknownExceptionInDevelopment_WritesInternalServerErrorWithMessage()
+        {
+            // Arrange
+            var context = new DefaultHttpContext();
+            var exception = new Exception("Something went wrong");
+
+            // Act
+            var handled = await CreateHandler(Environments.Development).TryHandleAsync(context, exception, CancellationToken.None);
+
+            // Assert
+            handled.ShouldBeTrue();
+            context.Response.StatusCode.ShouldBe(StatusCodes.Status500InternalServerError);
+            ShouldHaveWritten(context, exception, new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "An error occurred",
+                Detail = "Something went wrong"
+            });
+        }
+
+        [Fact]
+        public async Task TryHandleAsync_RequestClosedByClient_Returns499WithoutBody()
+        {
+            // Arrange
+            using var aborted = new CancellationTokenSource();
+            aborted.Cancel();
+            var context = new DefaultHttpContext { RequestAborted = aborted.Token };
+
+            // Act
+            var handled = await CreateHandler(Environments.Production)
+                .TryHandleAsync(context, new OperationCanceledException(aborted.Token), CancellationToken.None);
+
+            // Assert
+            handled.ShouldBeTrue();
+            context.Response.StatusCode.ShouldBe(GlobalExceptionHandler.ClientClosedRequestStatusCode);
+            A.CallTo(_problemDetailsService).MustNotHaveHappened();
+        }
+
+        [Fact]
+        public async Task TryHandleAsync_CanceledWhileClientIsConnected_WritesInternalServerError()
+        {
+            // Arrange
+            var context = new DefaultHttpContext();
+            var exception = new OperationCanceledException("Timeout of a provider");
+
+            // Act
+            var handled = await CreateHandler(Environments.Production).TryHandleAsync(context, exception, CancellationToken.None);
+
+            // Assert
+            handled.ShouldBeTrue();
+            context.Response.StatusCode.ShouldBe(StatusCodes.Status500InternalServerError);
+            ShouldHaveWritten(context, exception, new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "An error occurred",
+                Detail = null
+            });
+        }
+
+        private GlobalExceptionHandler CreateHandler(string environmentName)
+        {
+            var environment = A.Fake<IHostEnvironment>();
+            A.CallTo(() => environment.EnvironmentName).Returns(environmentName);
+            return new GlobalExceptionHandler(A.Fake<ILogger<GlobalExceptionHandler>>(), _problemDetailsService, environment);
+        }
+
+        private void ShouldHaveWritten(HttpContext httpContext, Exception exception, ProblemDetails expected)
+        {
+            A.CallTo(() => _problemDetailsService.TryWriteAsync(A<ProblemDetailsContext>._)).MustHaveHappenedOnceExactly();
+            _writtenContext.ShouldNotBeNull();
+            _writtenContext.HttpContext.ShouldBeSameAs(httpContext);
+            _writtenContext.Exception.ShouldBeSameAs(exception);
+            _writtenContext.ProblemDetails.ShouldBeEquivalentTo(expected);
         }
     }
 }

@@ -18,31 +18,28 @@ try
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseDeveloperExceptionPage();
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
-
-    app.UseSerilogRequestLogging();
-
+    app.UseExceptionHandler();
     app.UseStatusCodePages();
-    app.UseExceptionHandler(_ => { });
+    app.UseResponseCompression();
+    app.UseSerilogRequestLogging();
     app.UseHttpsRedirection();
-    app.UseRouting();
-    app.UseAuthentication();
-    app.UseAuthorization();
+
+    // The API description is available in every environment: the Docker image runs in Production.
+    app.MapOpenApi();
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "LyricsScraperApi"));
+
     app.MapControllers();
     app.MapHealthChecks("/api/health");
-    app.UseStatusCodePages();
 
     app.Run();
+    return 0;
 }
-catch (Exception ex)
+// HostAbortedException: the host was stopped on purpose (for example by WebApplicationFactory in the tests).
+catch (Exception ex) when (ex is not HostAbortedException)
 {
-    // Log fatal error
+    // A non-zero exit code tells Docker that the container failed.
     Log.Fatal(ex, "Application start-up failed");
+    return 1;
 }
 finally
 {
@@ -50,6 +47,3 @@ finally
     Log.Information("Shut down complete");
     Log.CloseAndFlush();
 }
-
-// Make the implicit Program class public so test projects can access it
-public partial class Program { }

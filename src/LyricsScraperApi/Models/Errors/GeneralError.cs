@@ -1,7 +1,7 @@
-﻿using LyricsScraperApi.Enums;
+using LyricsScraperApi.Enums;
 
 namespace LyricsScraperApi.Models.Errors
 {
-    public class GeneralError(string title, string description, StatusCode statusCode)
-        : BaseError(title, description, statusCode);
+    public class GeneralError(string code, string description, StatusCode statusCode)
+        : BaseError(code, description, statusCode);
 }

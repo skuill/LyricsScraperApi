@@ -1,11 +1,11 @@
-﻿using FluentValidation;
+using FluentValidation;
 using LyricsScraperApi.Filters;
+using LyricsScraperApi.Formatters;
 using LyricsScraperApi.Handlers;
-using LyricsScraperApi.Helpers;
-using LyricsScraperApi.Models.Requests;
 using LyricsScraperApi.Services;
 using LyricsScraperNET;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Serilog;
 using System.Reflection;
@@ -18,9 +18,9 @@ namespace LyricsScraperApi.Extensions
         public static void AddPresentation(this WebApplicationBuilder builder)
         {
             // Registering the Serilog logger
-            builder.Host.UseSerilog((context, loggerConfiguration) =>
+            builder.Services.AddSerilog((services, loggerConfiguration) =>
             {
-                loggerConfiguration.ReadFrom.Configuration(context.Configuration);
+                loggerConfiguration.ReadFrom.Configuration(builder.Configuration);
             });
 
             // Registering the Response Compression
@@ -54,37 +54,28 @@ namespace LyricsScraperApi.Extensions
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                    // requestType may come after the other properties of a search request, as in 1.x.
+                    options.JsonSerializerOptions.AllowOutOfOrderMetadataProperties = true;
                 });
+            // PostConfigure: the JSON formatter is added by MVC when the options are built.
+            builder.Services.PostConfigure<MvcOptions>(SearchRequestJsonInputFormatter.Replace);
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(opts =>
+            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+            builder.Services.AddOpenApi(options =>
             {
-                opts.EnableAnnotations(enableAnnotationsForInheritance: true, enableAnnotationsForPolymorphism: true);
-                opts.UseOneOfForPolymorphism();
-                opts.SelectSubTypesUsing(baseType =>
+                options.AddDocumentTransformer((document, context, cancellationToken) =>
                 {
-                    if (baseType == typeof(SearchRequestBaseDto))
-                    {
-                        return new[]
-                        {
-                            typeof(ArtistAndSongSearchRequestDto),
-                            typeof(UriSearchRequestDto),
-                        };
-                    }
-
-                    return Enumerable.Empty<Type>();
+                    document.Info.Title = "LyricsScraperApi";
+                    document.Info.Description = "Search for song lyrics across several lyrics sites, built on LyricsScraperNET.";
+                    document.Info.Version = Assembly.GetExecutingAssembly()
+                        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                        ?? document.Info.Version;
+                    return Task.CompletedTask;
                 });
-
-                var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                opts.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
             });
-
-            builder.Services.AddHttpContextAccessor();
 
             // Registering the Services
             builder.Services.AddScoped<GlobalRequestValidation>();
-            builder.Services.AddScoped<IFormatValidation, FormatValidation>();
         }
 
         public static IServiceCollection AddApplication(this IServiceCollection services)

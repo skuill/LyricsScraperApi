@@ -1,5 +1,3 @@
-version: '3.4'
-
 services:
   lyricsscraperapi:
     image: ${DOCKER_REGISTRY-}lyricsscraperapi

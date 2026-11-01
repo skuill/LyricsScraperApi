@@ -1,9 +1,14 @@
-﻿namespace LyricsScraperApi.Helpers
+namespace LyricsScraperApi.Helpers
 {
     public static class Constants
     {
-        public const string SearchRequestDescriminatorName = "requestType";
-        public const string ArtistAndSongRequestDescriminatorValue = "ArtistAndSong";
-        public const string UriRequestDescriminatorValue = "Uri";
+        public const string SearchRequestDiscriminatorName = "requestType";
+        public const string ArtistAndSongRequestDiscriminatorValue = "ArtistAndSong";
+        public const string UriRequestDiscriminatorValue = "Uri";
+
+        /// <summary>
+        /// Name of the ProblemDetails extension with the error code of the API, for example <c>Lyric.NotFound</c>.
+        /// </summary>
+        public const string ErrorCodeExtensionName = "errorCode";
     }
 }

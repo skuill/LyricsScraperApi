@@ -1,4 +1,4 @@
-﻿using LyricsScraperApi.Models;
+using LyricsScraperApi.Models;
 using LyricsScraperNET.Providers.Models;
 using ApiRequests = LyricsScraperApi.Models.Requests;
 using ApiResponses = LyricsScraperApi.Models.Responses;
@@ -32,9 +32,10 @@ namespace LyricsScraperApi.Mapping
 
         public static LibraryRequests.UriSearchRequest MapToLibrary(this ApiRequests.UriSearchRequestDto request)
         {
+            // UriSearchRequestValidator rejects a request without Uri before the mapping.
             return new LibraryRequests.UriSearchRequest
             (
-                request.Uri,
+                request.Uri!,
                 (ExternalProviderType)request.Provider
             );
         }

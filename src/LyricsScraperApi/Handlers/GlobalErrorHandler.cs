@@ -1,37 +1,23 @@
-using LyricsScraperApi.Enums;
+using LyricsScraperApi.Helpers;
 using LyricsScraperApi.Models.Errors;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 
 namespace LyricsScraperApi.Handlers;
 
 public static class GlobalErrorHandler
 {
-    public static IActionResult ToActionResult(this BaseError error)
+    /// <summary>
+    /// Turns an error into a ProblemDetails response. The ProblemDetailsFactory of the controller adds the
+    /// standard title, traceId and the fields from <c>AddProblemDetails</c>, so all errors of the API look the same.
+    /// </summary>
+    public static IActionResult ToActionResult(this BaseError error, ControllerBase controller)
     {
-        var problemDetails = new ProblemDetails
-        {
-            Title = error.Title,
-            Status = (int)error.StatusCode,
-            Detail = error.Description
-        };
+        var problemDetails = controller.ProblemDetailsFactory.CreateProblemDetails(
+            controller.HttpContext,
+            statusCode: (int)error.StatusCode,
+            detail: error.Description);
+        problemDetails.Extensions[Constants.ErrorCodeExtensionName] = error.Code;
 
-        // Map different error types to appropriate status codes
-        return error.StatusCode switch
-        {
-            StatusCode.NotFound => new NotFoundObjectResult(problemDetails)
-            { StatusCode = (int)HttpStatusCode.NotFound },
-            StatusCode.Conflict => new ConflictObjectResult(problemDetails)
-            { StatusCode = (int)HttpStatusCode.Conflict },
-            StatusCode.UnAuthorized => new ObjectResult(problemDetails)
-            { StatusCode = (int)HttpStatusCode.Unauthorized },
-            StatusCode.BadRequest => new BadRequestObjectResult(problemDetails)
-            { StatusCode = (int)HttpStatusCode.BadRequest },
-            StatusCode.Validation => new UnprocessableEntityObjectResult(problemDetails)
-            { StatusCode = (int)HttpStatusCode.UnprocessableEntity },
-            StatusCode.InternalServerError => new ObjectResult(problemDetails)
-            { StatusCode = (int)HttpStatusCode.InternalServerError },
-            _ => new BadRequestObjectResult(problemDetails) { StatusCode = (int)HttpStatusCode.BadRequest }
-        };
+        return new ObjectResult(problemDetails) { StatusCode = problemDetails.Status };
     }
 }

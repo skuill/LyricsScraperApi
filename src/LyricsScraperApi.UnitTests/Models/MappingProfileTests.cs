@@ -1,9 +1,12 @@
-﻿using LyricsScraperApi.Mapping;
+using LyricsScraperApi.Mapping;
 using LyricsScraperApi.Models;
+using LyricsScraperApi.Models.Responses;
+using LyricsScraperNET.Models.Responses;
 using LyricsScraperNET.Providers.Models;
+using Shouldly;
+using System.Reflection;
 using ApiRequests = LyricsScraperApi.Models.Requests;
 using LibraryRequests = LyricsScraperNET.Models.Requests;
-using LibraryResponses = LyricsScraperNET.Models.Responses;
 
 namespace LyricsScraperApi.UnitTests.Models
 {
@@ -57,7 +60,7 @@ namespace LyricsScraperApi.UnitTests.Models
             {
                 Artist = "Radiohead",
                 Song = "Creep",
-                Provider = ExternalProviderTypeDto.Genius
+                Provider = ExternalProviderTypeDto.Lrclib
             };
 
             // Act
@@ -67,7 +70,7 @@ namespace LyricsScraperApi.UnitTests.Models
             var typed = Assert.IsType<LibraryRequests.ArtistAndSongSearchRequest>(result);
             Assert.Equal("Radiohead", typed.Artist);
             Assert.Equal("Creep", typed.Song);
-            Assert.Equal(ExternalProviderType.Genius, typed.Provider);
+            Assert.Equal(ExternalProviderType.Lrclib, typed.Provider);
         }
 
         [Fact]
@@ -81,25 +84,56 @@ namespace LyricsScraperApi.UnitTests.Models
         }
 
         [Fact]
-        public void MapToApi_SearchResult_ShouldMapCorrectly()
+        public void MapToApi_FoundResult_ShouldMapCorrectly()
         {
             // Arrange
-            var libraryResult = LibraryResponses.SearchResult.Empty;
+            var libraryResult = LyricsScraperModelFactory.SearchResult(SearchResultCode.Found, "Some lyrics", ExternalProviderType.Lrclib);
 
             // Act
             var result = libraryResult.MapToApi();
 
             // Assert
-            Assert.False(result.Instrumental);
-            Assert.Empty(result.LyricText);
+            result.ShouldBeEquivalentTo(new SearchResultDto
+            {
+                Instrumental = false,
+                ExternalProvider = ExternalProviderTypeDto.Lrclib,
+                LyricText = "Some lyrics"
+            });
+        }
+
+        [Fact]
+        public void MapToApi_EmptyResult_ShouldMapCorrectly()
+        {
+            // Act
+            var result = SearchResult.Empty.MapToApi();
+
+            // Assert
+            result.ShouldBeEquivalentTo(new SearchResultDto
+            {
+                Instrumental = false,
+                ExternalProvider = ExternalProviderTypeDto.All,
+                LyricText = string.Empty
+            });
+        }
+
+        // The DTO maps to the library enum by number: both must have the same providers with the same numbers.
+        [Fact]
+        public void ExternalProviderTypeDto_HasTheProvidersOfTheLibrary()
+        {
+            var libraryProviders = typeof(ExternalProviderType)
+                .GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(field => field.GetCustomAttribute<ObsoleteAttribute>() is null)
+                .ToDictionary(field => (int)field.GetValue(null)!, field => field.Name == nameof(ExternalProviderType.None) ? nameof(ExternalProviderTypeDto.All) : field.Name);
+
+            var apiProviders = Enum.GetValues<ExternalProviderTypeDto>()
+                .ToDictionary(value => (int)value, value => value.ToString());
+
+            apiProviders.ShouldBeEquivalentTo(libraryProviders);
         }
 
         // Dummy unsupported type for testing fallback case
         private class DummyRequest : ApiRequests.SearchRequestBaseDto
         {
-            public DummyRequest(string requestType = "DummyRequest") : base(requestType)
-            {
-            }
         }
     }
 }
