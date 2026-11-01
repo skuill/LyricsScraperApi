@@ -52,7 +52,9 @@ CI fails when this command finds something. The rules are in `.editorconfig` (fo
 | Event | Jobs |
 |---|---|
 | Push or pull request to `main` | Lint, build, unit and integration tests with coverage to Codecov, Docker build for `linux/amd64` and `linux/arm64` without push. |
-| GitHub release published | The same, then push of the image to Docker Hub with the tags from [docker.md](docker.md#image-tags). |
+| GitHub release published | The same, then push of the image to Docker Hub with the tags from [docker.md](docker.md#image-tags), an SBOM and build provenance, and an update of the Docker Hub description: the short description from the workflow and `README.md` as the overview. |
+
+Secrets of the repository: `CODECOV_TOKEN`, `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`. The Docker Hub token needs the scope "Read, Write, Delete": the description update is refused with "Read & Write".
 
 To release:
 

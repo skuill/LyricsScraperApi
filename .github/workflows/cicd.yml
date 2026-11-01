@@ -92,5 +92,20 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           VERSION=${{ github.event_name == 'release' && steps.meta.outputs.version || '0.0.0-dev' }}
+        # SBOM and build provenance attached to the image: Docker Scout and other scanners read them.
+        sbom: true
+        provenance: mode=max
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    # The "Overview" on Docker Hub is README.md; its relative links become links to the files of the release tag.
+    # DOCKERHUB_TOKEN needs the scope Read, Write, Delete for this step (Read & Write is enough only for the push).
+    - name: Update Docker Hub description
+      if: github.event_name == 'release'
+      uses: peter-evans/dockerhub-description@v5
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        repository: ${{ env.IMAGE_NAME }}
+        short-description: REST API to search song lyrics across several lyrics sites, built on LyricsScraperNET.
+        enable-url-completion: true
