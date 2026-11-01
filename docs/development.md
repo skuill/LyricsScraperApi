@@ -10,7 +10,7 @@
 | Path | What |
 |---|---|
 | `src/LyricsScraperApi.sln` | Solution. |
-| `src/LyricsScraperApi/` | The service: `Controllers/`, `Services/` (calls LyricsScraperNET), `Models/` (DTOs and errors), `Mapping/`, `Validators/` (FluentValidation), `Filters/`, `Formatters/`, `Handlers/` (errors and exceptions to ProblemDetails). |
+| `src/LyricsScraperApi/` | The service: `Controllers/`, `Services/` (calls LyricsScraperNET), `Models/` (DTOs and errors), `Mapping/`, `Validators/` (FluentValidation), `Filters/`, `Formatters/`, `Handlers/` (errors and exceptions to ProblemDetails), `OpenApi/` (names, examples and extra fields of the OpenAPI document), `Logging/` (levels of the request log). |
 | `src/LyricsScraperApi.UnitTests/` | Unit tests, folders mirror the service. |
 | `src/LyricsScraperApi.IntegrationTests/` | The real app in memory (`WebApplicationFactory`) with a fake library client. |
 | `src/Directory.Build.props` | Target framework and build settings of all projects. |
@@ -43,7 +43,7 @@ New behavior comes with tests: FakeItEasy for the library client, whole objects 
 dotnet format src/LyricsScraperApi.sln --verify-no-changes
 ```
 
-CI fails when this command finds something. The rules are in `.editorconfig` (for now IDE0005 unused usings and IDE0130 namespace equals folder); `dotnet format src/LyricsScraperApi.sln` fixes them.
+CI fails when this command finds something. The rules are in `.editorconfig` (for now IDE0005 unused usings, IDE0130 namespace equals folder, IDE0161 file-scoped namespaces); `dotnet format src/LyricsScraperApi.sln` fixes them.
 
 ## CI and release
 

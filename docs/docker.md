@@ -34,7 +34,8 @@ The container runs as the non-root user `app`.
 
 ## Logs
 
-- Console: `docker logs lyrics-scraper-api`. A failed search lists what each provider did, for example `Providers: Lrclib: Failed (600 ms): HTTP 503; AZLyrics: NotFound (297 ms); ...`.
+- Console: `docker logs lyrics-scraper-api`. One line per request (`HTTP POST /api/LyricsScraper responded 404 in 2908 ms`) and one line with the search result; a failed search lists what each provider did, for example `Providers: Lrclib: Failed (600 ms): HTTP 503; AZLyrics: NotFound (297 ms); ...`. Each line ends with the trace id of the request (see [traceId](api.md#errors)).
+- Not logged: successful health checks (the `HEALTHCHECK` calls `/api/health` every 30 seconds), the details of ASP.NET Core (`Warning` and above only) and of LyricsScraperNET (`Error` only, the search result line already lists every provider).
 - Files: `/app/logs/webapi-<date>.log` inside the container, a new file every day and at 1 MB, the last 20 files are kept. They are lost with the container; to keep them, mount a volume: `-v lyrics-scraper-logs:/app/logs`.
 
 ## Health check

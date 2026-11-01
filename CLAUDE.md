@@ -5,7 +5,7 @@ Notes for AI coding agents working in this repository. Personal or machine-speci
 ## Build
 - ASP.NET Core on `net10.0` (set in `src/Directory.Build.props`), solution `src/LyricsScraperApi.sln`. Package versions only in `src/Directory.Packages.props` (central package management): `PackageReference` items have no `Version`.
 - `dotnet build src/LyricsScraperApi.sln --configuration Release`
-- Lint (same as CI): `dotnet format src/LyricsScraperApi.sln --verify-no-changes`. Rules in `.editorconfig` (IDE0005, IDE0130), also checked in the build (`EnforceCodeStyleInBuild`).
+- Lint (same as CI): `dotnet format src/LyricsScraperApi.sln --verify-no-changes`. Rules in `.editorconfig` (IDE0005, IDE0130, IDE0161 file-scoped namespaces), also checked in the build (`EnforceCodeStyleInBuild`).
 - CS1591 (missing XML comment) is off: write XML comments where they help the OpenAPI document (DTOs, controller actions).
 
 ## Layout
@@ -14,6 +14,9 @@ Notes for AI coding agents working in this repository. Personal or machine-speci
 - Request DTOs are polymorphic with System.Text.Json attributes (`[JsonPolymorphic]` on `SearchRequestBaseDto`, discriminator `requestType`). The base stays abstract: the OpenAPI generator emits `anyOf` and the discriminator only for an abstract base. `Formatters/SearchRequestJsonInputFormatter` turns the `NotSupportedException` of a missing `requestType` into a 400.
 - Errors: `Models/Errors` (`BaseError` with `Code`, `LyricsScraperErrors`), `Handlers/GlobalErrorHandler` (ProblemDetails with the `errorCode` extension), `Handlers/GlobalExceptionHandler` (unexpected exceptions), `Filters/GlobalRequestValidation` (FluentValidation to ValidationProblemDetails).
 - Result pattern in `ResultPattern/`, manual mapping in `Mapping/LyricsScraperProfile.cs`.
+- Validation only with FluentValidation: the implicit `[Required]` of non-nullable types is off (`SuppressImplicitRequiredAttributeForNonNullableReferenceTypes`). The OpenAPI `required` lists come from the validators (`OpenApi/ValidatorRequiredSchemaTransformer`).
+- OpenAPI: `OpenApi/` holds the document info, schema names (`SchemaReferenceIds`, no `Dto`/`Base`), enum and ProblemDetails fixes and the named examples of the search (`SearchExamplesOperationTransformer`, texts from the same constants as the code). Check a change in Swagger UI, not only in the JSON.
+- Logs: Serilog from `appsettings.json` (service `Information`, `Microsoft`/`System` `Warning`, `LyricsScraperNET` `Error`); request log levels in `Logging/RequestLogLevel` (health checks not logged). No `UseHttpsRedirection` on purpose.
 - Docs: `README.md` (landing page), `docs/` (api, docker, development, migration guides).
 
 ## Tests

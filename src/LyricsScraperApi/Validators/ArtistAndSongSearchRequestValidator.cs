@@ -1,16 +1,15 @@
 ﻿using FluentValidation;
 using LyricsScraperApi.Models.Requests;
 
-namespace LyricsScraperApi.Validators
+namespace LyricsScraperApi.Validators;
+
+public class ArtistAndSongSearchRequestValidator : AbstractValidator<ArtistAndSongSearchRequestDto>
 {
-    public class ArtistAndSongSearchRequestValidator : AbstractValidator<ArtistAndSongSearchRequestDto>
+    public ArtistAndSongSearchRequestValidator()
     {
-        public ArtistAndSongSearchRequestValidator()
-        {
-            RuleFor(x => x.Artist)
-                .NotEmpty().WithMessage("The {PropertyName} is not specified in the request.");
-            RuleFor(x => x.Song)
-                .NotEmpty().WithMessage("The {PropertyName} is not specified in the request.");
-        }
+        RuleFor(x => x.Artist)
+            .NotEmpty().WithMessage("The {PropertyName} is not specified in the request.");
+        RuleFor(x => x.Song)
+            .NotEmpty().WithMessage("The {PropertyName} is not specified in the request.");
     }
 }

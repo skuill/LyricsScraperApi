@@ -61,6 +61,7 @@ The request body is the same, `requestType` can still be anywhere in the object.
 | Tags | `<version>`, `latest` | `<version>`, `<major>.<minor>`, `<major>`, `latest` |
 | Health check | None | `HEALTHCHECK` on `/api/health` |
 | Log level | `Debug` for everything, also ASP.NET Core internals | `Information` for the service, `Warning` for `Microsoft` and `System` (see [settings](docker.md#settings)) |
+| HTTP to HTTPS redirect | When `ASPNETCORE_HTTPS_PORTS` was set | None: API clients usually do not follow redirects; use HTTPS directly or a reverse proxy |
 | Exit code when the start fails | 0 | 1 |
 
 Use the tag `2` to get fixes without breaking changes. More: [docker.md](docker.md).

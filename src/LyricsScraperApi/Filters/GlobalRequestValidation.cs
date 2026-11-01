@@ -22,9 +22,7 @@ public class GlobalRequestValidation(ProblemDetailsFactory problemDetailsFactory
             var argumentType = argument.GetType();
             var validatorType = typeof(IValidator<>).MakeGenericType(argumentType);
 
-            var validator = context.HttpContext.RequestServices.GetService(validatorType) as IValidator
-                ?? GetBaseValidator(argumentType, context.HttpContext.RequestServices);
-            if (validator == null) continue;
+            if (context.HttpContext.RequestServices.GetService(validatorType) is not IValidator validator) continue;
 
             var validationContext = new ValidationContext<object>(argument);
             var validationResult = await validator.ValidateAsync(validationContext, context.HttpContext.RequestAborted);
@@ -45,20 +43,5 @@ public class GlobalRequestValidation(ProblemDetailsFactory problemDetailsFactory
         }
 
         await next();
-    }
-
-    private IValidator? GetBaseValidator(Type argumentType, IServiceProvider services)
-    {
-        var baseType = argumentType.BaseType;
-        while (baseType != null)
-        {
-            var validatorType = typeof(IValidator<>).MakeGenericType(baseType);
-            var validator = services.GetService(validatorType) as IValidator;
-            if (validator != null)
-                return validator;
-
-            baseType = baseType.BaseType;
-        }
-        return null;
     }
 }

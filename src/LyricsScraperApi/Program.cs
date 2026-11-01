@@ -1,4 +1,5 @@
 using LyricsScraperApi.Extensions;
+using LyricsScraperApi.Logging;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -21,15 +22,16 @@ try
     app.UseExceptionHandler();
     app.UseStatusCodePages();
     app.UseResponseCompression();
-    app.UseSerilogRequestLogging();
-    app.UseHttpsRedirection();
+    app.UseSerilogRequestLogging(); // options (levels) in AddPresentation
+    // No UseHttpsRedirection: API clients usually do not follow redirects, and the Docker image serves HTTP only
+    // (HTTPS belongs to a reverse proxy or to ASPNETCORE_HTTPS_PORTS with a certificate).
 
     // The API description is available in every environment: the Docker image runs in Production.
     app.MapOpenApi();
     app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "LyricsScraperApi"));
 
     app.MapControllers();
-    app.MapHealthChecks("/api/health");
+    app.MapHealthChecks(RequestLogLevel.HealthPath);
 
     app.Run();
     return 0;

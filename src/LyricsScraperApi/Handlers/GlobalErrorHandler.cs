@@ -14,7 +14,7 @@ public static class GlobalErrorHandler
     {
         var problemDetails = controller.ProblemDetailsFactory.CreateProblemDetails(
             controller.HttpContext,
-            statusCode: (int)error.StatusCode,
+            statusCode: error.StatusCode,
             detail: error.Description);
         problemDetails.Extensions[Constants.ErrorCodeExtensionName] = error.Code;
 

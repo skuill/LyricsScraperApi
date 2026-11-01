@@ -88,7 +88,7 @@ Every error is [ProblemDetails](https://www.rfc-editor.org/rfc/rfc9457) (`applic
 
 | Status | `errorCode` | When |
 |---|---|---|
-| 400 | (none, `errors` per field) | Invalid JSON, unknown `requestType` or `provider`, an empty `artist`, `song` or `uri`. |
+| 400 | (none, `errors` per field) | Invalid JSON or an empty body, a missing or unknown `requestType`, an unknown `provider` (the message lists the available values), an empty `artist`, `song` or `uri`. |
 | 400 | `Lyric.BadRequest` | The library rejected the request, for example a provider that is not available. |
 | 404 | `Lyric.NotFound` | At least one provider answered and none has the lyrics. |
 | 503 | `Lyric.ProvidersUnavailable` | No provider could answer (site down, timeout, error). The lyrics may exist: try again later. |
@@ -125,7 +125,9 @@ A validation error:
 }
 ```
 
-`traceId` is also in the logs of the service, so one failed request can be found there.
+Every log line of a request ends with the middle part of its `traceId` (`3ca0c357e049bdf1d21003a19c6c9539` in `00-3ca0c357e049bdf1d21003a19c6c9539-c4e6a1f2b9d37e01-00`), so one failed request can be found in the logs.
+
+The OpenAPI document has named examples of every request and response, Swagger UI shows them in the "Examples" lists.
 
 ## Examples
 
