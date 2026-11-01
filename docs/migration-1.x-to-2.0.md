@@ -60,6 +60,7 @@ The request body is the same, `requestType` can still be anywhere in the object.
 | Platforms | `linux/amd64` | `linux/amd64`, `linux/arm64` |
 | Tags | `<version>`, `latest` | `<version>`, `<major>.<minor>`, `<major>`, `latest` |
 | Health check | None | `HEALTHCHECK` on `/api/health` |
+| Log level | `Debug` for everything, also ASP.NET Core internals | `Information` for the service, `Warning` for `Microsoft` and `System` (see [settings](docker.md#settings)) |
 | Exit code when the start fails | 0 | 1 |
 
 Use the tag `2` to get fixes without breaking changes. More: [docker.md](docker.md).

@@ -31,4 +31,10 @@
 		<Using Include="Xunit" />
 	</ItemGroup>
 
+	<!-- Tests run one by one: every test host replaces the static Serilog logger (Log.Logger, set by AddSerilog),
+	     so hosts started in parallel overwrite each other's logger and its levels. -->
+	<ItemGroup>
+		<Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
 </Project>

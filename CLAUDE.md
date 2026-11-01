@@ -21,7 +21,7 @@ Notes for AI coding agents working in this repository. Personal or machine-speci
 - Same as CI, from the repository root:
   - `dotnet test src/LyricsScraperApi.UnitTests --configuration Release -- --coverage --coverage-output-format cobertura`
   - `dotnet test src/LyricsScraperApi.IntegrationTests --configuration Release -- --coverage --coverage-output-format cobertura`
-- Integration tests run the real app in memory (`WebApplicationFactory<Program>`, environment Production) with a fake `ILyricsScraperClient`: no network.
+- Integration tests run the real app in memory (`WebApplicationFactory<Program>`, environment Production) with a fake `ILyricsScraperClient`: no network. They run one by one (`xunit.runner.json`): every host replaces the static Serilog logger, so parallel hosts overwrite each other's log levels.
 - Pass `TestContext.Current.CancellationToken` to async calls in tests (xUnit1051).
 - New behavior needs tests: whole objects in asserts, verify the calls of the library client. Mutation check for every fix or new behavior: break it, run the tests, at least one must fail, restore.
 

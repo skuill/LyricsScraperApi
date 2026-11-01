@@ -28,7 +28,7 @@ A release `2.1.3` is pushed as:
 | `ASPNETCORE_HTTP_PORTS` | `8180` | Port (or ports, `;`-separated) inside the container. The health check uses the first one. An invalid value does not stop the start: ASP.NET Core falls back to port 80 and the container becomes `unhealthy`. |
 | `ASPNETCORE_HTTPS_PORTS` | not set | HTTPS also needs a certificate, see [Hosting ASP.NET Core images with Docker over HTTPS](https://learn.microsoft.com/aspnet/core/security/docker-https). Port `8181` is exposed for it. |
 | `ASPNETCORE_ENVIRONMENT` | `Production` | `Development` adds the exception message to 500 responses. |
-| `Serilog__MinimumLevel__Default` | `Debug` | Log level, for example `Information`. Any setting of `appsettings.json` can be set this way (`__` between sections). |
+| `Serilog__MinimumLevel__Default` | `Information` | Log level of the service. ASP.NET Core and .NET (`Microsoft`, `System`) log from `Warning`: to see their details, for example `-e Serilog__MinimumLevel__Override__Microsoft=Information`. Any setting of `appsettings.json` can be set this way (`__` between sections). |
 
 The container runs as the non-root user `app`.
 

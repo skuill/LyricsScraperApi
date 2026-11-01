@@ -130,4 +130,4 @@ A validation error:
 ## Examples
 
 - [`src/LyricsScraper.http`](../src/LyricsScraper.http) for Visual Studio and VS Code (REST Client).
-- [Postman collection and environment](../postman).
+- [Postman collection and environment](../postman): every request above, the 2.0 errors and the OpenAPI document. Postman can also build a collection from the running service: Import, then the link `http://localhost:8180/openapi/v1.json`.
